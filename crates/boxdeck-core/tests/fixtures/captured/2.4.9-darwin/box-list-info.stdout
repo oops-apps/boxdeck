@@ -1,0 +1,27 @@
+1792357195,,ui,info,boxdeck/arch (virtualbox%!(VAGRANT_COMMA) 0%!(VAGRANT_COMMA) (amd64))
+1792357195,,box-name,boxdeck/arch
+1792357195,,box-provider,virtualbox
+1792357195,,box-version,0
+1792357195,,box-architecture,amd64
+1792357195,,box-info,author,boxdeck
+1792357195,,ui,info,  - author: boxdeck
+1792357195,,box-info,homepage,https://example.com/a%!(VAGRANT_COMMA)b
+1792357195,,ui,info,  - homepage: https://example.com/a%!(VAGRANT_COMMA)b
+1792357195,,ui,info,boxdeck/arch (vmware_desktop%!(VAGRANT_COMMA) 0%!(VAGRANT_COMMA) (arm64))
+1792357195,,box-name,boxdeck/arch
+1792357195,,box-provider,vmware_desktop
+1792357195,,box-version,0
+1792357195,,box-architecture,arm64
+1792357195,,box-info,author,boxdeck
+1792357195,,ui,info,  - author: boxdeck
+1792357195,,box-info,homepage,https://example.com/a%!(VAGRANT_COMMA)b
+1792357195,,ui,info,  - homepage: https://example.com/a%!(VAGRANT_COMMA)b
+1792357195,,ui,info,boxdeck/test (vmware_desktop%!(VAGRANT_COMMA) 0%!(VAGRANT_COMMA) (arm64))
+1792357195,,box-name,boxdeck/test
+1792357195,,box-provider,vmware_desktop
+1792357195,,box-version,0
+1792357195,,box-architecture,arm64
+1792357195,,box-info,author,boxdeck
+1792357195,,ui,info,  - author: boxdeck
+1792357195,,box-info,homepage,https://example.com/a%!(VAGRANT_COMMA)b
+1792357195,,ui,info,  - homepage: https://example.com/a%!(VAGRANT_COMMA)b

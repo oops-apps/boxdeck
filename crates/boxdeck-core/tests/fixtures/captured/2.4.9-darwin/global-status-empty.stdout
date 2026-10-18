@@ -1,0 +1,9 @@
+1792353626,,metadata,machine-count,0
+1792353626,,ui,info,id       
+1792353626,,ui,info,name   
+1792353626,,ui,info,provider 
+1792353626,,ui,info,state  
+1792353626,,ui,info,directory                           
+1792353626,,ui,info,
+1792353626,,ui,info,--------------------------------------------------------------------
+1792353626,,ui,info,There are no active Vagrant environments on this computer! Or%!(VAGRANT_COMMA)\nyou haven't destroyed and recreated Vagrant environments that were\nstarted with an older version of Vagrant.

@@ -1,0 +1,320 @@
+---
+source: crates/boxdeck-mcp/tests/mcp.rs
+expression: summary
+---
+[
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "architecture",
+      "name",
+      "provider",
+      "source",
+      "version",
+      "wait_seconds"
+    ],
+    "name": "box_add"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "keep_used",
+      "wait_seconds"
+    ],
+    "name": "box_prune"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "all_architectures",
+      "name",
+      "provider",
+      "version",
+      "wait_seconds"
+    ],
+    "name": "box_remove"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "architecture",
+      "name",
+      "provider",
+      "wait_seconds"
+    ],
+    "name": "box_update"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "job_id"
+    ],
+    "name": "cancel_job"
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true
+    },
+    "has_output_schema": true,
+    "input": [],
+    "name": "check_box_updates"
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "has_output_schema": true,
+    "input": [
+      "job_id",
+      "tail_lines"
+    ],
+    "name": "get_job"
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "has_output_schema": true,
+    "input": [
+      "machine",
+      "project"
+    ],
+    "name": "get_machine_details"
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "has_output_schema": true,
+    "input": [
+      "machine",
+      "project"
+    ],
+    "name": "get_machine_status"
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "has_output_schema": true,
+    "input": [],
+    "name": "list_boxes"
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "has_output_schema": true,
+    "input": [
+      "limit"
+    ],
+    "name": "list_jobs"
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "has_output_schema": true,
+    "input": [],
+    "name": "list_machines"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "machine",
+      "project",
+      "wait_seconds"
+    ],
+    "name": "machine_destroy"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "machine",
+      "project",
+      "provider",
+      "provision",
+      "provisioners",
+      "wait_seconds"
+    ],
+    "name": "machine_halt"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "machine",
+      "project",
+      "provider",
+      "provision",
+      "provisioners",
+      "wait_seconds"
+    ],
+    "name": "machine_provision"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "machine",
+      "project",
+      "provider",
+      "provision",
+      "provisioners",
+      "wait_seconds"
+    ],
+    "name": "machine_reload"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "machine",
+      "project",
+      "provider",
+      "provision",
+      "provisioners",
+      "wait_seconds"
+    ],
+    "name": "machine_resume"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "machine",
+      "project",
+      "provider",
+      "provision",
+      "provisioners",
+      "wait_seconds"
+    ],
+    "name": "machine_suspend"
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "machine",
+      "project",
+      "provider",
+      "provision",
+      "provisioners",
+      "wait_seconds"
+    ],
+    "name": "machine_up"
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "has_output_schema": true,
+    "input": [
+      "project"
+    ],
+    "name": "read_vagrantfile"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "command",
+      "machine",
+      "project",
+      "timeout_seconds"
+    ],
+    "name": "ssh_exec"
+  },
+  {
+    "annotations": {
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "has_output_schema": true,
+    "input": [
+      "project"
+    ],
+    "name": "validate_vagrantfile"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "readOnlyHint": false
+    },
+    "has_output_schema": true,
+    "input": [
+      "content",
+      "expected_content",
+      "project"
+    ],
+    "name": "write_vagrantfile"
+  }
+]

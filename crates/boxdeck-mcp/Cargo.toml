@@ -1,0 +1,33 @@
+[package]
+name = "boxdeck-mcp"
+description = "MCP server for Boxdeck (stdio)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lib]
+name = "boxdeck_mcp"
+
+[[bin]]
+name = "boxdeck-mcp"
+path = "src/main.rs"
+
+[dependencies]
+boxdeck-core = { workspace = true }
+rmcp = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+rmcp = { workspace = true, features = ["client"] }
+semver = { workspace = true }
+tempfile = { workspace = true }
+
+[lints]
+workspace = true

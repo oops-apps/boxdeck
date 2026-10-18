@@ -1,0 +1,16 @@
+target
+dist
+node_modules
+src-tauri
+src/ipc/generated
+package-lock.json
+Cargo.lock
+PLAN.md
+PROMPTS.md
+docs/plan.md
+docs/followups.md
+CLAUDE.md
+crates/*/tests/fixtures
+crates/*/bindings
+# Hand-written site pages; whitespace inside their code blocks is significant
+site/**/*.html

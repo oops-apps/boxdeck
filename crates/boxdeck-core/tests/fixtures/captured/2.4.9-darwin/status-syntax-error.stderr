@@ -1,0 +1,8 @@
+Vagrant failed to initialize at a very early stage:
+
+There is a syntax error in the following Vagrantfile. The syntax error
+message is reproduced below for convenience:
+
+/tmp/boxdeck-capture/broken/Vagrantfile:2: syntax error, unexpected end-of-input
+  config.vm.box = 
+                  ^

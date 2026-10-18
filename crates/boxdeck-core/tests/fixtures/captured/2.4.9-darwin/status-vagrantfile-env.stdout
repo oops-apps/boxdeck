@@ -1,0 +1,6 @@
+1792353632,custom,metadata,provider,docker
+1792353632,custom,provider-name,docker
+1792353632,custom,state,not_created
+1792353632,custom,state-human-short,not created
+1792353632,custom,state-human-long,The environment has not yet been created. Run `vagrant up` to\ncreate the environment. If a machine is not created%!(VAGRANT_COMMA) only the\ndefault provider will be shown. So if a provider is not listed%!(VAGRANT_COMMA)\nthen the machine is not created for that environment.
+1792353632,,ui,info,Current machine states:\n\ncustom                    not created (docker)\n\nThe environment has not yet been created. Run `vagrant up` to\ncreate the environment. If a machine is not created%!(VAGRANT_COMMA) only the\ndefault provider will be shown. So if a provider is not listed%!(VAGRANT_COMMA)\nthen the machine is not created for that environment.

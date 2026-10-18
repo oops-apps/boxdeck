@@ -1,0 +1,11 @@
+1792353637,web,metadata,provider,docker
+1792353637,db,metadata,provider,docker
+1792353638,web,provider-name,docker
+1792353638,web,state,stopped
+1792353638,web,state-human-short,stopped
+1792353638,web,state-human-long,The container is created but not running. You can run it again\nwith `vagrant up`. If the container always goes to "stopped"\nright away after being started%!(VAGRANT_COMMA) it is because the command being\nrun exits and doesn't keep running.
+1792353638,db,provider-name,docker
+1792353638,db,state,not_created
+1792353638,db,state-human-short,not created
+1792353638,db,state-human-long,The environment has not yet been created. Run `vagrant up` to\ncreate the environment. If a machine is not created%!(VAGRANT_COMMA) only the\ndefault provider will be shown. So if a provider is not listed%!(VAGRANT_COMMA)\nthen the machine is not created for that environment.
+1792353638,,ui,info,Current machine states:\n\nweb                       stopped (docker)\ndb                        not created (docker)\n\nThis environment represents multiple VMs. The VMs are all listed\nabove with their current state. For more information about a specific\nVM%!(VAGRANT_COMMA) run `vagrant status NAME`.

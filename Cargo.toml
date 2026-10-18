@@ -1,0 +1,64 @@
+[workspace]
+resolver = "3"
+members = [
+  "crates/boxdeck-core",
+  "crates/boxdeck-mcp",
+  "src-tauri",
+  "tests/fake-vagrant",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/oops-apps/boxdeck"
+rust-version = "1.92"
+
+# Versions are pinned here and resolved exactly by the committed Cargo.lock.
+[workspace.dependencies]
+axum = "0.8.9"
+boxdeck-core = { path = "crates/boxdeck-core" }
+boxdeck-mcp = { path = "crates/boxdeck-mcp" }
+directories = "6.0.0"
+# Not on crates.io; pinned to a commit and allowed in deny.toml.
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs", rev = "c4c45d503ea115a839aae718d02f79e7c7f0f673" }
+notify = "8.2.0"
+notify-debouncer-full = "0.7.0"
+portable-pty = "0.9.0"
+insta = { version = "1.49.0", features = ["json"] }
+rand = "0.10.3"
+rmcp = { version = "3.5.1", features = ["server", "macros", "transport-io"] }
+schemars = "1.2.3"
+process-wrap = { version = "10.0.1", default-features = false, features = ["tokio1", "creation-flags", "job-object", "kill-on-drop", "process-group"] }
+semver = { version = "1.0.28", features = ["serde"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tempfile = "3.27.0"
+thiserror = "2.0.21"
+tokio = { version = "1.53.3", features = ["rt-multi-thread", "macros", "process", "sync", "time", "io-util", "fs"] }
+tracing = "0.1.44"
+ts-rs = { version = "12.0.1", features = ["semver-impl", "no-serde-warnings"] }
+walkdir = "2.5.0"
+which = "8.0.6"
+# Only to name process creation flags; version matches process-wrap's.
+windows = { version = "0.62.2", features = ["Win32_System_Threading"] }
+tauri = { version = "2.12.4", features = ["tray-icon"] }
+tauri-plugin-autostart = "2.7.0"
+tauri-build = "2.7.3"
+tauri-plugin-dialog = "2.8.3"
+tauri-plugin-notification = "2.7.0"
+tauri-plugin-opener = "2.7.2"
+tauri-plugin-single-instance = "2.5.4"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true

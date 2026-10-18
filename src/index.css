@@ -1,0 +1,263 @@
+@import "tailwindcss";
+@import "@xterm/xterm/css/xterm.css";
+
+:root {
+  --bg: #f6f6f7;
+  --panel: #ffffff;
+  --sunken: #efeff1;
+  /* Button hover/press: stronger than row hover (sunken) so buttons in rows still react. */
+  --hover: #dfdfe5;
+  --active: #d3d3db;
+  --border: #e2e2e6;
+  --text: #1b1b1f;
+  --muted: #6b6b76;
+  /* --accent is for accent-colored text; --accent-solid fills buttons and badges. */
+  --accent: #4d6cdf;
+  --accent-solid: #4d6cdf;
+  --accent-text: #ffffff;
+  --danger: #c8322b;
+  --danger-text: #ffffff;
+  --ok: #1f8a4c;
+  --warn: #b26a00;
+  --idle: #8a8a94;
+  --focus: #4d6cdf;
+  --term-bg: #16161a;
+  --term-fg: #e6e6ea;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121214;
+    --panel: #19191c;
+    --sunken: #101012;
+    --hover: #2e2e35;
+    --active: #3a3a42;
+    --border: #2b2b30;
+    --text: #ececef;
+    --muted: #9c9ca7;
+    --accent: #8da2f5;
+    --accent-solid: #4d6cdf;
+    --accent-text: #ffffff;
+    --danger: #ff6b62;
+    --danger-text: #1d0605;
+    --ok: #4cc884;
+    --warn: #f0a937;
+    --idle: #8a8a94;
+    --focus: #8da2f5;
+    --term-bg: #0d0d10;
+    --term-fg: #e6e6ea;
+    color-scheme: dark;
+  }
+}
+
+@theme {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-sunken: var(--sunken);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-solid: var(--accent-solid);
+  --color-accent-text: var(--accent-text);
+  --color-danger: var(--danger);
+  --color-danger-text: var(--danger-text);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-idle: var(--idle);
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, Ubuntu,
+    "Cantarell", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+/* Desktop apps don't select UI chrome, but text people may copy stays selectable. */
+.selectable,
+input,
+textarea {
+  user-select: text;
+  cursor: auto;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.xterm .xterm-viewport {
+  background-color: var(--term-bg) !important;
+}
+
+/* Motion. Entrances decelerate hard; exits are shorter so dismissals never feel like lag. */
+:root {
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+}
+
+@keyframes pop-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes glyph-settle {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+    filter: blur(2px);
+  }
+}
+
+@keyframes state-wash {
+  from {
+    opacity: 0.16;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.anim-overlay[data-state="open"] {
+  animation: fade-in 180ms var(--ease-settle);
+}
+.anim-overlay[data-state="closed"] {
+  animation: fade-out 120ms var(--ease-exit) forwards;
+}
+
+.anim-dialog[data-state="open"] {
+  animation: pop-in 240ms var(--ease-settle);
+}
+.anim-dialog[data-state="closed"] {
+  animation: pop-out 120ms var(--ease-exit) forwards;
+}
+
+/* Radix sets the origin to the trigger, so menus and tips grow out of what opened them. */
+.anim-popover {
+  transform-origin: var(
+    --radix-dropdown-menu-content-transform-origin,
+    var(--radix-tooltip-content-transform-origin)
+  );
+}
+.anim-popover[data-state="open"],
+.anim-popover[data-state="delayed-open"],
+.anim-popover[data-state="instant-open"] {
+  animation: pop-in 160ms var(--ease-settle);
+}
+.anim-popover[data-state="closed"] {
+  animation: fade-out 100ms var(--ease-exit) forwards;
+}
+
+.anim-rise {
+  animation: rise-in 260ms var(--ease-settle);
+}
+
+.anim-enter {
+  animation: pop-in 180ms var(--ease-settle);
+}
+
+.anim-glyph {
+  display: inline-block;
+  animation: glyph-settle 360ms var(--ease-settle);
+}
+
+/* One-shot wash in the new state's color (set via a text-color class) after a real change. */
+.anim-wash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: currentColor;
+  opacity: 0;
+  animation: state-wash 1400ms ease-out;
+}
+
+/* Reduced motion keeps the fades and the color wash, which carry state, but drops the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin,
+  .animate-pulse {
+    animation: none;
+  }
+  .anim-dialog[data-state="open"],
+  .anim-popover[data-state="open"],
+  .anim-popover[data-state="delayed-open"],
+  .anim-popover[data-state="instant-open"],
+  .anim-rise,
+  .anim-enter,
+  .anim-glyph {
+    animation: fade-in 160ms ease-out;
+  }
+  .anim-dialog[data-state="closed"] {
+    animation: fade-out 100ms ease-in forwards;
+  }
+}
+
+/* Thin, theme-matched scrollbars instead of the chunky default. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--muted) 45%, transparent) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--muted) 40%, transparent);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--muted) 65%, transparent);
+}

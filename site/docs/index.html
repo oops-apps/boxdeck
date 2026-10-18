@@ -1,0 +1,444 @@
+<!doctype html>
+<!-- Content mirrors docs/install.md, docs/mcp.md, docs/troubleshooting.md and docs/architecture.md; update both together. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boxdeck docs: install, AI agents (MCP) and troubleshooting</title>
+<meta name="description" content="How to install Vagrant, a provider and Boxdeck, connect AI agents over MCP, and fix common problems such as VMware DriverAPICertificateError or Vagrant not found.">
+<link rel="canonical" href="https://boxdeck.oopsapps.com/docs/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#060606">
+<meta name="color-scheme" content="dark">
+<link rel="icon" type="image/png" href="../icon.png">
+<link rel="apple-touch-icon" href="../icon.png">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Boxdeck">
+<meta property="og:url" content="https://boxdeck.oopsapps.com/docs/">
+<meta property="og:title" content="Boxdeck documentation">
+<meta property="og:description" content="Install Vagrant, a provider and Boxdeck; connect AI agents over MCP; troubleshoot common problems.">
+<meta property="og:image" content="https://boxdeck.oopsapps.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://boxdeck.oopsapps.com/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Boxdeck documentation",
+  "description": "Install Vagrant, a provider and Boxdeck; connect AI agents over MCP; troubleshoot common problems.",
+  "url": "https://boxdeck.oopsapps.com/docs/",
+  "image": "https://boxdeck.oopsapps.com/og-image.png",
+  "about": { "@id": "https://boxdeck.oopsapps.com/#app" },
+  "isPartOf": { "@type": "WebSite", "name": "Boxdeck", "url": "https://boxdeck.oopsapps.com/" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@300,400,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060606;
+  --raise: #111112;
+  --line: rgba(255,255,255,.07);
+  --line-2: rgba(255,255,255,.12);
+  --text: #f5f5f5;
+  --muted: #a6a6a6;
+  --dim: #6e6e72;
+  --pearl: linear-gradient(90deg, #bcc0ca -1%, #feeae1 42%, #c0cef2 102%);
+  --accent: #8da2f5;
+  --ok: #4cc884;
+  --warn: #f0a937;
+  --danger: #ff6b62;
+  --display: "General Sans", "Onest", system-ui, sans-serif;
+  --sans: "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 90px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 var(--sans); -webkit-font-smoothing: antialiased; }
+body::before { content: ""; position: fixed; inset: -200px 0 auto; height: 600px; background: radial-gradient(600px 300px at 20% 30%, rgba(141,162,245,.10), transparent 70%); pointer-events: none; z-index: -1; }
+a { color: var(--text); text-decoration: underline; text-decoration-color: rgba(141,162,245,.5); text-underline-offset: 3px; }
+a:hover { text-decoration-color: var(--accent); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 24px; }
+
+header.top { position: sticky; top: 0; z-index: 20; padding: 14px 0; background: linear-gradient(var(--bg) 40%, transparent); }
+header.top .wrap { display: flex; align-items: center; gap: 16px; }
+.logo { display: flex; align-items: center; gap: 10px; font: 500 19px var(--display); letter-spacing: -.02em; text-decoration: none; }
+.logo small { font: 500 12px var(--mono); color: var(--dim); letter-spacing: .06em; text-transform: uppercase; margin-left: 4px; }
+.glass { background: rgba(30,30,30,.64); backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 8px 24px -18px rgba(0,0,0,.5); }
+.navpill { margin-left: auto; display: flex; align-items: center; gap: 2px; border-radius: 999px; padding: 5px; font-size: 14px; }
+.navpill a { padding: 6px 13px; border-radius: 999px; color: #d6d6d6; text-decoration: none; transition: background .15s, color .15s; }
+.navpill a:hover { background: rgba(255,255,255,.06); color: #fff; }
+.navpill a.pearl { background: var(--pearl); color: #0d0d0d; font-weight: 500; }
+
+.layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 56px; padding-top: 28px; }
+.toc { position: sticky; top: 84px; align-self: start; max-height: calc(100vh - 100px); overflow-y: auto; padding-bottom: 24px; scrollbar-width: thin; }
+.toc .grp { font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin: 18px 10px 6px; }
+.toc .grp:first-child { margin-top: 0; }
+.toc a { display: block; padding: 5px 10px; border-radius: 8px; font-size: 14px; color: var(--muted); text-decoration: none; line-height: 1.4; }
+.toc a.sub { padding-left: 22px; font-size: 13px; }
+.toc a:hover { color: var(--text); background: rgba(255,255,255,.04); }
+.toc a.on { color: var(--text); background: rgba(255,255,255,.07); }
+
+article { min-width: 0; max-width: 820px; padding-bottom: 80px; }
+.count { display: inline-block; font-size: 12px; color: var(--muted); border: 1px solid var(--line-2); border-radius: 999px; padding: 3px 11px; }
+h1 { font: 300 clamp(40px, 6vw, 68px)/1.04 var(--display); letter-spacing: -.035em; margin: 16px 0 14px; background: linear-gradient(122deg, #f5f5f5 0%, #f5f5f5 22%, #8b8b8b 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lede { color: var(--muted); font-size: 18px; margin: 0 0 8px; max-width: 620px; }
+.guide { margin-top: 72px; padding-top: 40px; border-top: 1px solid var(--line); }
+.guide > .count { margin-bottom: 4px; }
+h2 { font: 300 clamp(30px, 4vw, 42px)/1.1 var(--display); letter-spacing: -.025em; margin: 10px 0 16px; }
+h3 { font: 500 21px/1.3 var(--sans); letter-spacing: -.01em; margin: 44px 0 10px; }
+h4 { font: 500 17px/1.35 var(--sans); margin: 30px 0 8px; }
+p, li { color: #cfcfd2; }
+p { margin: 0 0 14px; }
+ul, ol { padding-left: 22px; margin: 0 0 16px; }
+li { margin: 4px 0; }
+li > pre { margin: 10px 0; }
+strong { color: var(--text); font-weight: 600; }
+code { font-family: var(--mono); font-size: .86em; color: #e8e8ec; background: rgba(255,255,255,.06); padding: .1em .38em; border-radius: 5px; }
+pre { position: relative; margin: 14px 0 20px; padding: 16px 18px; border-radius: 12px; background: #0b0b0d; box-shadow: inset 0 0 0 1px var(--line); overflow-x: auto; font: 13px/1.7 var(--mono); color: #e6e6ea; }
+pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+pre.diagram { font-size: 12px; line-height: 1.5; }
+.copy { position: absolute; top: 8px; right: 8px; font: 500 12px var(--sans); color: var(--muted); background: rgba(255,255,255,.06); border: 0; border-radius: 7px; padding: 4px 9px; cursor: pointer; opacity: 0; transition: opacity .15s; }
+pre:hover .copy, .copy:focus-visible { opacity: 1; }
+.copy:hover { color: var(--text); }
+.tbl { overflow-x: auto; margin: 14px 0 22px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+th { font: 500 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--dim); background: rgba(255,255,255,.02); }
+td { color: #cfcfd2; }
+tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+td.wrap-code code { white-space: normal; }
+.note { border-radius: 12px; padding: 14px 16px; background: rgba(141,162,245,.07); box-shadow: inset 0 0 0 1px rgba(141,162,245,.18); margin: 16px 0 20px; }
+.note p:last-child { margin: 0; }
+.note.warn { background: rgba(255,107,98,.06); box-shadow: inset 0 0 0 1px rgba(255,107,98,.2); }
+.anchor { margin-left: 8px; color: var(--dim); text-decoration: none; opacity: 0; font-weight: 400; }
+h2:hover .anchor, h3:hover .anchor, h4:hover .anchor { opacity: 1; }
+
+footer { padding: 40px 0 60px; color: var(--dim); font-size: 13px; border-top: 1px solid var(--line); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 26px; align-items: center; }
+footer nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: 20px; }
+footer a { color: var(--dim); text-decoration: none; }
+footer a:hover { color: var(--text); }
+footer p { flex-basis: 100%; margin: 6px 0 0; color: var(--dim); }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; gap: 0; }
+  .toc { position: static; max-height: none; border-radius: 14px; background: var(--raise); box-shadow: inset 0 0 0 1px var(--line); padding: 14px 8px; }
+  .toc a.sub { display: none; }
+  .navpill a:not(.pearl):not(.keep) { display: none; }
+}
+@media (max-width: 640px) {
+  .wrap { padding: 0 16px; }
+  .guide { margin-top: 56px; }
+  .logo small { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="../"><img src="../icon.png" alt="" width="26" height="26">boxdeck <small>Docs</small></a>
+    <nav class="navpill glass" aria-label="Site">
+      <a class="keep" href="../">Home</a>
+      <a href="#install">Install</a>
+      <a href="#mcp">AI agents</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+      <a class="pearl" href="https://github.com/oops-apps/boxdeck">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap layout">
+  <nav class="toc" aria-label="On this page">
+    <div class="grp">Get started</div>
+    <a href="#install">Installing</a>
+    <a class="sub" href="#install-vagrant">1. Install Vagrant</a>
+    <a class="sub" href="#provider">2. Set up a provider</a>
+    <a class="sub" href="#install-boxdeck">3. Install Boxdeck</a>
+    <a class="sub" href="#build">Building from source</a>
+    <div class="grp">AI agents</div>
+    <a href="#mcp">Boxdeck for AI agents</a>
+    <a class="sub" href="#mcp-connect">Two ways to connect</a>
+    <a class="sub" href="#mcp-levels">Access levels</a>
+    <a class="sub" href="#mcp-approvals">Approvals</a>
+    <a class="sub" href="#mcp-projects">Projects</a>
+    <a class="sub" href="#mcp-audit">Pausing and auditing</a>
+    <a class="sub" href="#mcp-security">Security notes</a>
+    <div class="grp">Help</div>
+    <a href="#troubleshooting">Troubleshooting</a>
+    <a class="sub" href="#ts-vagrant">Can't find Vagrant</a>
+    <a class="sub" href="#ts-provider">Provider not found</a>
+    <a class="sub" href="#ts-vmware">DriverAPICertificateError</a>
+    <a class="sub" href="#ts-ports">Port collision</a>
+    <a class="sub" href="#ts-password">Password prompts</a>
+    <a class="sub" href="#ts-hyperv">Hyper-V</a>
+    <a class="sub" href="#ts-tray">No tray icon on Linux</a>
+    <a class="sub" href="#ts-unsigned">Unsigned app warnings</a>
+    <a class="sub" href="#ts-agents">Agents can't connect</a>
+    <div class="grp">Contributors</div>
+    <a href="#architecture">Architecture</a>
+  </nav>
+
+  <article>
+    <span class="count">Documentation</span>
+    <h1>Boxdeck docs</h1>
+    <p class="lede">Everything you need to install Vagrant, a provider and Boxdeck, connect AI agents, and fix the problems people run into most.</p>
+
+    <!-- docs/install.md -->
+    <section class="guide" id="install">
+      <span class="count">Get started</span>
+      <h2>Installing<a class="anchor" href="#install" aria-label="Link to this section">#</a></h2>
+      <p>Boxdeck is a front end for HashiCorp Vagrant: it runs the <code>vagrant</code> you have installed. You need three things:</p>
+      <ol>
+        <li><strong>Vagrant</strong> 2.3 or newer.</li>
+        <li><strong>A provider</strong>: the software that actually runs the VMs (VMware, VirtualBox, Parallels, libvirt, Hyper-V or Docker), plus any Vagrant plugin it needs.</li>
+        <li><strong>Boxdeck</strong> itself.</li>
+      </ol>
+
+      <h3 id="install-vagrant">1. Install Vagrant<a class="anchor" href="#install-vagrant" aria-label="Link to this section">#</a></h3>
+      <div class="tbl"><table>
+        <thead><tr><th>System</th><th>Command</th></tr></thead>
+        <tbody>
+          <tr><td>macOS (Homebrew)</td><td class="wrap-code"><code>brew tap hashicorp/tap &amp;&amp; brew install hashicorp/tap/hashicorp-vagrant</code></td></tr>
+          <tr><td>Windows (winget)</td><td><code>winget install Hashicorp.Vagrant</code></td></tr>
+          <tr><td>Ubuntu / Debian</td><td>Add HashiCorp's apt repository, then <code>sudo apt install vagrant</code> (see below)</td></tr>
+          <tr><td>Fedora / RHEL / others</td><td>Follow <a href="https://developer.hashicorp.com/vagrant/install">HashiCorp's install page</a></td></tr>
+        </tbody>
+      </table></div>
+      <p>On Ubuntu or Debian:</p>
+<pre><code>wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update &amp;&amp; sudo apt install vagrant</code></pre>
+      <p>Check it: <code>vagrant --version</code> should print 2.3 or newer.</p>
+
+      <h3 id="provider">2. Set up a provider<a class="anchor" href="#provider" aria-label="Link to this section">#</a></h3>
+      <p>Pick the one you use. Vagrant needs both the virtualization software and, for some providers, a plugin.</p>
+
+      <h4 id="vmware">VMware (Fusion on macOS, Workstation on Windows/Linux)<a class="anchor" href="#vmware" aria-label="Link to this section">#</a></h4>
+      <p>VMware needs <strong>three</strong> pieces:</p>
+      <ol>
+        <li>VMware Fusion (macOS) or VMware Workstation Pro (Windows, Linux), installed and opened once.</li>
+        <li>The Vagrant plugin:
+<pre><code>vagrant plugin install vagrant-vmware-desktop</code></pre></li>
+        <li>The <strong>Vagrant VMware Utility</strong>, a small system service the plugin talks to. It's separate from the plugin and easy to miss.
+          <ul>
+            <li>macOS: <code>brew install --cask vagrant-vmware-utility</code></li>
+            <li>Windows and Linux: download it from <a href="https://developer.hashicorp.com/vagrant/install/vmware">HashiCorp's VMware page</a> and run the installer.</li>
+          </ul>
+          The installer needs administrator rights. Without the Utility, Vagrant reports <code>DriverAPICertificateError</code> and Boxdeck shows that error on the project.
+        </li>
+      </ol>
+      <p>Use it with <code>config.vm.provider "vmware_desktop"</code> in your Vagrantfile, or set <code>VAGRANT_DEFAULT_PROVIDER=vmware_desktop</code> in Boxdeck's Settings → Environment variables.</p>
+
+      <h4 id="virtualbox">VirtualBox<a class="anchor" href="#virtualbox" aria-label="Link to this section">#</a></h4>
+      <p>Install <a href="https://www.virtualbox.org/wiki/Downloads">VirtualBox</a> (on macOS: <code>brew install --cask virtualbox</code>). No plugin is needed. On Apple Silicon Macs, use VirtualBox 7.1 or newer and arm64 boxes.</p>
+
+      <h4 id="parallels">Parallels (macOS)<a class="anchor" href="#parallels" aria-label="Link to this section">#</a></h4>
+      <p>Install Parallels Desktop (Pro or Business edition), then:</p>
+<pre><code>vagrant plugin install vagrant-parallels</code></pre>
+
+      <h4 id="libvirt">libvirt (Linux)<a class="anchor" href="#libvirt" aria-label="Link to this section">#</a></h4>
+      <p>Install libvirt and QEMU from your distribution, then the plugin. See the <a href="https://vagrant-libvirt.github.io/vagrant-libvirt/installation.html">vagrant-libvirt install guide</a> for the build dependencies, then:</p>
+<pre><code>vagrant plugin install vagrant-libvirt</code></pre>
+
+      <h4 id="hyperv">Hyper-V (Windows)<a class="anchor" href="#hyperv" aria-label="Link to this section">#</a></h4>
+      <p>Turn on the Hyper-V Windows feature. Vagrant supports it without a plugin, but it must run as administrator, so start Boxdeck with "Run as administrator".</p>
+
+      <h4 id="docker">Docker<a class="anchor" href="#docker" aria-label="Link to this section">#</a></h4>
+      <p>Install Docker. Vagrant's Docker provider is built in.</p>
+
+      <h4 id="check-provider">Check the provider<a class="anchor" href="#check-provider" aria-label="Link to this section">#</a></h4>
+      <p>In an empty folder:</p>
+<pre><code>printf 'Vagrant.configure("2") { |c| c.vm.box = "bento/ubuntu-24.04" }\n' &gt; Vagrantfile
+VAGRANT_DEFAULT_PROVIDER=vmware_desktop vagrant status</code></pre>
+      <p>Replace <code>vmware_desktop</code> with your provider (<code>virtualbox</code>, <code>parallels</code>, <code>libvirt</code>, <code>hyperv</code>, <code>docker</code>). It should say <code>not created</code>, not an error.</p>
+
+      <h3 id="install-boxdeck">3. Install Boxdeck<a class="anchor" href="#install-boxdeck" aria-label="Link to this section">#</a></h3>
+      <p>Download the latest release from <a href="https://github.com/oops-apps/boxdeck/releases">GitHub Releases</a>:</p>
+      <div class="tbl"><table>
+        <thead><tr><th>System</th><th>File</th><th>First launch</th></tr></thead>
+        <tbody>
+          <tr><td>macOS</td><td><code>.dmg</code> (Apple Silicon or Intel)</td><td>Drag Boxdeck to Applications. Early builds aren't signed: right-click the app, choose <strong>Open</strong>, then <strong>Open</strong> again.</td></tr>
+          <tr><td>Windows</td><td><code>.msi</code> or <code>-setup.exe</code></td><td>If SmartScreen warns, choose <strong>More info → Run anyway</strong>.</td></tr>
+          <tr><td>Linux</td><td><code>.deb</code>, <code>.rpm</code> or <code>.AppImage</code></td><td>Install the package, or <code>chmod +x</code> the AppImage and run it. On GNOME, install the AppIndicator extension for the tray icon.</td></tr>
+        </tbody>
+      </table></div>
+      <p>When Boxdeck starts, it finds <code>vagrant</code> on your <code>PATH</code> and lists every machine Vagrant knows about. If it can't find Vagrant, it shows these steps; after installing, click <strong>Look again</strong>.</p>
+      <p>To use Boxdeck from AI agents, see <a href="#mcp">Boxdeck for AI agents</a>.</p>
+
+      <h3 id="build">Building from source<a class="anchor" href="#build" aria-label="Link to this section">#</a></h3>
+      <p>See <a href="https://github.com/oops-apps/boxdeck#development">Development</a> in the README. You'll also need Rust, Node.js 22+, the <a href="https://v2.tauri.app/start/prerequisites/">Tauri prerequisites</a> and <code>cargo install cargo-deny</code>.</p>
+    </section>
+
+    <!-- docs/mcp.md -->
+    <section class="guide" id="mcp">
+      <span class="count">AI agents</span>
+      <h2>Boxdeck for AI agents (MCP)<a class="anchor" href="#mcp" aria-label="Link to this section">#</a></h2>
+      <p>Boxdeck includes a <a href="https://modelcontextprotocol.io">Model Context Protocol</a> server, so AI agents and coding assistants can list, start, stop and inspect your Vagrant machines. Agents use the same code paths as the app, and you decide what they may do.</p>
+      <div class="note"><p>Agent access is <strong>off</strong> until you turn it on in <strong>Settings → MCP / Agents</strong>.</p></div>
+
+      <h3 id="mcp-connect">Two ways to connect<a class="anchor" href="#mcp-connect" aria-label="Link to this section">#</a></h3>
+      <div class="tbl"><table>
+        <thead><tr><th></th><th>HTTP (recommended)</th><th>stdio</th></tr></thead>
+        <tbody>
+          <tr><td>How</td><td class="wrap-code"><code>http://127.0.0.1:47816/mcp</code> with an <code>Authorization: Bearer &lt;token&gt;</code> header</td><td>The client starts the bundled <code>boxdeck-mcp</code> program</td></tr>
+          <tr><td>Needs the app running</td><td>Yes</td><td>No</td></tr>
+          <tr><td>Destructive tools</td><td>Asked in a Boxdeck window each time</td><td>Refused, unless you allow them for headless mode</td></tr>
+          <tr><td>Shows up in Activity</td><td>Live</td><td>Afterwards, from the shared audit log</td></tr>
+        </tbody>
+      </table></div>
+      <p>Each client gets its <strong>own token</strong> (Settings → MCP / Agents → Clients → Add client), so you can rotate or revoke one without affecting the others. Settings shows ready-to-copy snippets, including a <code>claude mcp add</code> command for Claude Code.</p>
+<pre><code>{
+  "mcpServers": {
+    "boxdeck": {
+      "type": "http",
+      "url": "http://127.0.0.1:47816/mcp",
+      "headers": { "Authorization": "Bearer &lt;token&gt;" }
+    }
+  }
+}</code></pre>
+      <p>For stdio, point the client at <code>boxdeck-mcp</code> inside the app bundle (Settings shows the exact path). It reads the same settings as the app.</p>
+
+      <h3 id="mcp-levels">Access levels<a class="anchor" href="#mcp-levels" aria-label="Link to this section">#</a></h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Level</th><th>Tools</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Read</strong> (default)</td><td class="wrap-code"><code>list_machines</code>, <code>get_machine_status</code>, <code>get_machine_details</code>, <code>list_boxes</code>, <code>check_box_updates</code>, <code>read_vagrantfile</code>, <code>validate_vagrantfile</code>, <code>get_job</code>, <code>list_jobs</code></td></tr>
+          <tr><td><strong>Operate</strong></td><td class="wrap-code">Read, plus <code>machine_up</code>, <code>machine_halt</code>, <code>machine_suspend</code>, <code>machine_resume</code>, <code>machine_reload</code>, <code>machine_provision</code>, <code>box_add</code>, <code>box_update</code>, <code>cancel_job</code> (only jobs the agent started)</td></tr>
+          <tr><td><strong>Full</strong></td><td class="wrap-code">Operate, plus <code>machine_destroy</code>, <code>box_remove</code>, <code>box_prune</code>, <code>write_vagrantfile</code>, each approved by you; and <code>ssh_exec</code> if you turn it on separately</td></tr>
+        </tbody>
+      </table></div>
+      <p>Every tool carries MCP annotations (<code>readOnlyHint</code>, <code>destructiveHint</code>, <code>idempotentHint</code>) so clients can show and gate them.</p>
+      <p>Long actions such as <code>vagrant up</code> run as jobs. Action tools wait up to <code>wait_seconds</code> (default 60, max 600) and then return the result, or a job id to poll with <code>get_job</code>. Clients that send a progress token get Vagrant's output as progress notifications.</p>
+
+      <h3 id="mcp-approvals">Approvals<a class="anchor" href="#mcp-approvals" aria-label="Link to this section">#</a></h3>
+      <p>When an agent calls a destructive tool over HTTP, Boxdeck opens a small window naming the agent, the tool, the project, the machine and the exact arguments. <strong>Deny</strong> is the default button, and no answer within two minutes counts as a denial.</p>
+
+      <h3 id="mcp-projects">Projects<a class="anchor" href="#mcp-projects" aria-label="Link to this section">#</a></h3>
+      <p>Every project follows the global setting (all projects, or only the ones you allow) unless you set it to <strong>Allow</strong> or <strong>Deny</strong> under Settings → Projects. Agents can't see denied projects at all.</p>
+
+      <h3 id="mcp-audit">Pausing and auditing<a class="anchor" href="#mcp-audit" aria-label="Link to this section">#</a></h3>
+      <ul>
+        <li><strong>Pause Agent Access</strong> in the tray menu refuses every call at once, in both the app and a running <code>boxdeck-mcp</code>.</li>
+        <li>Every call, allowed or not, is appended to <code>audit.jsonl</code> in Boxdeck's data folder with the time, client, tool, arguments, decision and result. Activity → Agent calls shows it.</li>
+      </ul>
+
+      <h3 id="mcp-security">Security notes<a class="anchor" href="#mcp-security" aria-label="Link to this section">#</a></h3>
+      <ul>
+        <li>The HTTP server listens on <code>127.0.0.1</code> only, checks the <code>Host</code> header against loopback names (against DNS-rebinding attacks from web pages), rejects browser <code>Origin</code>s other than localhost, and requires a token on every request.</li>
+        <li>There is no generic "run a vagrant command" tool. Inputs are checked against known projects, known machine names and allowlisted values before Vagrant runs.</li>
+        <li><code>get_machine_details</code> returns SSH host, port and user only. Private keys are never read.</li>
+      </ul>
+      <div class="note warn"><p><strong>Tool output is untrusted.</strong> VM logs, Vagrantfile contents and <code>ssh_exec</code> output can contain text written to steer an agent. Boxdeck can't control what an agent does with it, so it limits the damage instead: access levels, approvals, per-project deny and the pause switch. Keep <code>ssh_exec</code> off unless you need it.</p></div>
+    </section>
+
+    <!-- docs/troubleshooting.md -->
+    <section class="guide" id="troubleshooting">
+      <span class="count">Help</span>
+      <h2>Troubleshooting<a class="anchor" href="#troubleshooting" aria-label="Link to this section">#</a></h2>
+
+      <h3 id="ts-vagrant">"Boxdeck can't find Vagrant"<a class="anchor" href="#ts-vagrant" aria-label="Link to this section">#</a></h3>
+      <p>Apps started from Finder, the Dock or the Start menu don't always get your shell's <code>PATH</code>. Boxdeck imports your login shell's <code>PATH</code> at startup; if Vagrant still isn't found, set its full path in <strong>Settings → Vagrant program</strong>, then click <strong>Look again</strong>.</p>
+
+      <h3 id="ts-provider">A provider isn't found, or "No usable default provider"<a class="anchor" href="#ts-provider" aria-label="Link to this section">#</a></h3>
+      <p>Provider tools (<code>vmrun</code>, <code>VBoxManage</code>, …) are looked up on the same <code>PATH</code>. Add their folder under <strong>Settings → Extra PATH folders</strong>. For VMware, Vagrant also needs the <code>vagrant-vmware-desktop</code> plugin and the <strong>Vagrant VMware Utility</strong> service; see <a href="#vmware">VMware setup</a>.</p>
+
+      <h3 id="ts-vmware"><code>DriverAPICertificateError</code> with VMware<a class="anchor" href="#ts-vmware" aria-label="Link to this section">#</a></h3>
+      <p>The Vagrant VMware Utility isn't installed (it's separate from the plugin). On macOS: <code>brew install --cask vagrant-vmware-utility</code>; elsewhere, use HashiCorp's installer.</p>
+
+      <h3 id="ts-ports">"Port collision" although nothing uses the port<a class="anchor" href="#ts-ports" aria-label="Link to this section">#</a></h3>
+      <p>If <code>vagrant up</code> reports a forwarded-port collision for every port it tries (<code>the ports in the auto-correction range are all also used</code>), something on your computer is answering every local connection. VPN, proxy and security software can do this. Vagrant then believes every port is taken. Pause that software, or remove <code>forwarded_port</code> lines and reach the VM by its own IP address. This is outside Boxdeck; plain <code>vagrant up</code> in a terminal fails the same way.</p>
+
+      <h3 id="ts-password">A job fails asking for a password (for example NFS on macOS)<a class="anchor" href="#ts-password" aria-label="Link to this section">#</a></h3>
+      <p>Boxdeck runs Vagrant without a terminal, so prompts fail instead of hanging. Open the job's log and click <strong>Run in terminal</strong> to repeat it in a terminal tab where you can type the password.</p>
+
+      <h3 id="ts-hyperv">Hyper-V on Windows<a class="anchor" href="#ts-hyperv" aria-label="Link to this section">#</a></h3>
+      <p>Hyper-V needs Vagrant to run as administrator. Start Boxdeck with "Run as administrator".</p>
+
+      <h3 id="ts-tray">No tray icon on Linux<a class="anchor" href="#ts-tray" aria-label="Link to this section">#</a></h3>
+      <p>GNOME needs the AppIndicator extension to show tray icons. Everything in the tray is also available in the main window.</p>
+
+      <h3 id="ts-unsigned">"Boxdeck can't be opened" on macOS, or a SmartScreen warning on Windows<a class="anchor" href="#ts-unsigned" aria-label="Link to this section">#</a></h3>
+      <p>Early releases aren't code-signed yet. On macOS, right-click the app, choose <strong>Open</strong>, then <strong>Open</strong> again. On Windows, choose <strong>More info → Run anyway</strong>.</p>
+
+      <h3 id="ts-agents">Agents can't connect<a class="anchor" href="#ts-agents" aria-label="Link to this section">#</a></h3>
+      <p>Check <strong>Settings → MCP / Agents</strong>: agent access must be on, the status line should say "Listening on …", and the client must send its own token. If the port is taken, Boxdeck says so instead of picking another one; choose a free port and update your client.</p>
+    </section>
+
+    <!-- docs/architecture.md -->
+    <section class="guide" id="architecture">
+      <span class="count">Contributors</span>
+      <h2>Architecture<a class="anchor" href="#architecture" aria-label="Link to this section">#</a></h2>
+      <p>Boxdeck is a Cargo workspace plus a React frontend.</p>
+<pre class="diagram"><code>React UI (src/)  ──invoke / Channel──►  Tauri app (src-tauri/)  ──►  boxdeck-core  ──►  vagrant CLI
+                                          │  tray, approvals,           ▲
+                                          │  MCP over HTTP ─────────────┤
+MCP clients ──stdio──► boxdeck-mcp ───────────────────────────────────────┘</code></pre>
+      <div class="tbl"><table>
+        <thead><tr><th>Crate / folder</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>crates/boxdeck-core</code></td><td>Everything that knows about Vagrant: locating it, parsing <code>--machine-readable</code> output, reading the machine index (read-only, under a shared lock), the job runner (queues, per-machine locks, cancel), boxes, settings, the MCP access policy and the audit log. No Tauri dependency.</td></tr>
+          <tr><td><code>crates/boxdeck-mcp</code></td><td>The MCP tools (via <code>rmcp</code>) on top of core, plus the <code>boxdeck-mcp</code> stdio binary.</td></tr>
+          <tr><td><code>src-tauri</code></td><td>The desktop app: IPC commands, tray, the in-app MCP HTTP endpoint, approval windows. Thin glue over core.</td></tr>
+          <tr><td><code>src</code></td><td>React + TypeScript UI. Types in <code>src/ipc/generated/</code> are generated from Rust with <code>ts-rs</code> (<code>npm run gen:types</code>).</td></tr>
+          <tr><td><code>tests/fake-vagrant</code></td><td>A scriptable stand-in for <code>vagrant</code>, used by integration tests.</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3 id="decisions">Key decisions<a class="anchor" href="#decisions" aria-label="Link to this section">#</a></h3>
+      <ul>
+        <li><strong>Vagrant is only ever run as a separate process</strong>, with an argument list (never a shell string), its project folder as working directory and stdin closed. Actions get <code>--no-tty</code>; <code>--machine-readable</code> queries must not, because <code>--no-tty</code> overrides machine-readable output.</li>
+        <li><strong>Machine names come from Vagrant's machine index</strong>, not <code>global-status</code>, whose machine-readable output has no names.</li>
+        <li><strong>Live state comes from one <code>vagrant status</code> per project</strong>, with a concurrency limit and a cache, refreshed on demand, on focus, after jobs, when the index file changes, and optionally on an interval.</li>
+        <li><strong>Cancel interrupts first</strong> (Vagrant cleans up), then kills the whole process tree.</li>
+        <li><strong>Settings are versioned JSON</strong> written atomically by the app; <code>boxdeck-mcp</code> reads the same file and follows changes, so the pause switch works for both.</li>
+      </ul>
+    </section>
+  </article>
+</div>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="../"><img src="../icon.png" alt="" width="20" height="20" loading="lazy">boxdeck</a>
+    <nav>
+      <a href="../">Home</a>
+      <a href="https://github.com/oops-apps/boxdeck/releases">Download</a>
+      <a href="https://github.com/oops-apps/boxdeck/blob/main/CHANGELOG.md">Changelog</a>
+      <a href="https://github.com/oops-apps/boxdeck/blob/main/LICENSE">MIT License</a>
+    </nav>
+    <p>Boxdeck is not affiliated with or endorsed by HashiCorp. Vagrant is a trademark of HashiCorp, Inc.</p>
+  </div>
+</footer>
+
+<script>
+  // Copy buttons on code blocks.
+  document.querySelectorAll("pre").forEach((pre) => {
+    if (pre.classList.contains("diagram")) return;
+    const b = document.createElement("button");
+    b.className = "copy"; b.type = "button"; b.textContent = "Copy";
+    b.addEventListener("click", async () => {
+      try { await navigator.clipboard.writeText(pre.querySelector("code").innerText); b.textContent = "Copied"; }
+      catch { b.textContent = "Press ⌘C"; }
+      setTimeout(() => { b.textContent = "Copy"; }, 1500);
+    });
+    pre.appendChild(b);
+  });
+  // Highlight the sidebar entry for the section in view.
+  const links = new Map([...document.querySelectorAll(".toc a")].map((a) => [a.getAttribute("href").slice(1), a]));
+  const spy = new IntersectionObserver((es) => es.forEach((e) => {
+    if (!e.isIntersecting) return;
+    links.forEach((a) => a.classList.remove("on"));
+    links.get(e.target.id)?.classList.add("on");
+  }), { rootMargin: "-90px 0px -70% 0px" });
+  links.forEach((_, id) => { const el = document.getElementById(id); if (el) spy.observe(el); });
+</script>
+</body>
+</html>

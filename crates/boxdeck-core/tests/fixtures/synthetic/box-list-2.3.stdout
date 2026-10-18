@@ -1,0 +1,4 @@
+1700000000,,ui,info,hashicorp/bionic64 (virtualbox%!(VAGRANT_COMMA) 1.0.282)
+1700000000,,box-name,hashicorp/bionic64
+1700000000,,box-provider,virtualbox
+1700000000,,box-version,1.0.282

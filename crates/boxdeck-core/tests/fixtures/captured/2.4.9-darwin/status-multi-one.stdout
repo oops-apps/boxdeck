@@ -1,0 +1,6 @@
+1792353634,web,metadata,provider,docker
+1792353634,web,provider-name,docker
+1792353634,web,state,running
+1792353634,web,state-human-short,running
+1792353634,web,state-human-long,The container is created and running. You can stop it using\n`vagrant halt`%!(VAGRANT_COMMA) see logs with `vagrant docker-logs`%!(VAGRANT_COMMA) and\nkill/destroy it with `vagrant destroy`.
+1792353634,,ui,info,Current machine states:\n\nweb                       running (docker)\n\nThe container is created and running. You can stop it using\n`vagrant halt`%!(VAGRANT_COMMA) see logs with `vagrant docker-logs`%!(VAGRANT_COMMA) and\nkill/destroy it with `vagrant destroy`.

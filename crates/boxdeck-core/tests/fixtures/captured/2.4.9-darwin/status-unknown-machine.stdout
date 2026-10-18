@@ -1,0 +1,2 @@
+1792353630,,ui,error,The machine with the name 'nope' was not found configured for\nthis Vagrant environment.
+1792353630,,error-exit,Vagrant::Errors::MachineNotFound,The machine with the name 'nope' was not found configured for\nthis Vagrant environment.

@@ -1,0 +1,75 @@
+name: Release
+
+# Builds signed-for-update bundles for every platform and attaches them to a draft release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            target: aarch64-apple-darwin
+          - platform: macos-latest
+            target: x86_64-apple-darwin
+          - platform: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+          - platform: windows-latest
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
+            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # beforeBuildCommand builds the boxdeck-mcp sidecar for the same target.
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Boxdeck ${{ github.ref_name }}
+          releaseBody: See CHANGELOG.md for what changed.
+          releaseDraft: true
+          args: --target ${{ matrix.target }}
+
+      - name: Attach standalone boxdeck-mcp
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ext=""; [[ "${{ matrix.target }}" == *windows* ]] && ext=".exe"
+          name="boxdeck-mcp-${{ github.ref_name }}-${{ matrix.target }}"
+          mkdir -p "$name"
+          cp "target/${{ matrix.target }}/release/boxdeck-mcp$ext" "$name/"
+          cp LICENSE "$name/"
+          if [[ "$ext" == ".exe" ]]; then 7z a "$name.zip" "$name" >/dev/null; f="$name.zip";
+          else tar -czf "$name.tar.gz" "$name"; f="$name.tar.gz"; fi
+          gh release upload "${{ github.ref_name }}" "$f" --clobber

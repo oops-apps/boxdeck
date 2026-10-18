@@ -1,0 +1,59 @@
+# Private planning docs (the repo is public)
+/PLAN.md
+/PROMPTS.md
+/docs/plan.md
+/docs/followups.md
+/docs/progress.md
+
+# Rust
+/target/
+/src-tauri/target/
+**/*.rs.bk
+
+# Tauri
+/src-tauri/gen/schemas/
+# Sidecar binaries are built by scripts/build-sidecar, never committed
+/src-tauri/binaries/
+
+# Node / Vite
+node_modules/
+/dist/
+/dist-ssr/
+*.local
+coverage/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+# Tauri updater signing keys
+*.key
+*.key.pub
+
+# Claude Code local files
+/.claude/settings.local.json
+/.claude/launch.json
+/CLAUDE.local.md
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Stale ts-rs output from before .cargo/config.toml set TS_RS_EXPORT_DIR
+/crates/*/bindings/
+
+# Desktop-only app; `tauri icon` also emits mobile sets
+/src-tauri/icons/android/
+/src-tauri/icons/ios/
+
+# Throwaway Vagrant projects and VMs used for local testing
+/.testbed/

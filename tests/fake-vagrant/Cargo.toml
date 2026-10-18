@@ -1,0 +1,18 @@
+[package]
+name = "fake-vagrant"
+description = "Scriptable fake `vagrant` binary for Boxdeck integration and e2e tests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish = false
+
+[[bin]]
+name = "vagrant"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { workspace = true, features = ["signal"] }
+
+[lints]
+workspace = true

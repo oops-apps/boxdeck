@@ -1,0 +1,36 @@
+[package]
+name = "boxdeck-core"
+description = "Vagrant logic, jobs, config and MCP policy shared by the Boxdeck app and boxdeck-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+directories = { workspace = true }
+fix-path-env = { workspace = true }
+notify = { workspace = true }
+notify-debouncer-full = { workspace = true }
+portable-pty = { workspace = true }
+process-wrap = { workspace = true }
+semver = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tempfile = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+ts-rs = { workspace = true }
+walkdir = { workspace = true }
+which = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+windows = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+
+[lints]
+workspace = true

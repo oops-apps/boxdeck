@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#5778E8"/>
+      <stop offset="1" stop-color="#1C2B7A"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="drop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#0a1240" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <!-- macOS icon grid: 824×824 body with ~185px corners inside the 1024 canvas. -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#sheen)"/>
+
+  <!-- The deck: two stacked plates. -->
+  <g>
+    <path d="M262 700 L512 560 L762 700 L512 840 Z" fill="#ffffff" fill-opacity="0.16"/>
+    <path d="M262 700 L512 840 L512 872 L262 732 Z" fill="#ffffff" fill-opacity="0.10"/>
+    <path d="M512 840 L762 700 L762 732 L512 872 Z" fill="#ffffff" fill-opacity="0.06"/>
+  </g>
+  <g>
+    <path d="M262 630 L512 490 L762 630 L512 770 Z" fill="#ffffff" fill-opacity="0.30"/>
+    <path d="M262 630 L512 770 L512 802 L262 662 Z" fill="#ffffff" fill-opacity="0.20"/>
+    <path d="M512 770 L762 630 L762 662 L512 802 Z" fill="#ffffff" fill-opacity="0.12"/>
+  </g>
+
+  <!-- The box. -->
+  <g filter="url(#drop)" stroke-linejoin="round">
+    <path d="M512 244 L708 354 L512 464 L316 354 Z" fill="#ffffff"/>
+    <path d="M316 354 L512 464 L512 690 L316 580 Z" fill="#E2E8FF"/>
+    <path d="M512 464 L708 354 L708 580 L512 690 Z" fill="#BCC8F5"/>
+    <!-- Packing tape across the lid and down the front. -->
+    <path d="M414 299 L610 409 L610 444 L414 334 Z" fill="#9DAEEE"/>
+    <path d="M610 409 L610 635 L580 652 L580 426 Z" fill="#8EA1E8"/>
+    <!-- Crisp edges so it reads at 32 px. -->
+    <path d="M512 464 L512 690" stroke="#ffffff" stroke-width="6" stroke-opacity="0.9"/>
+    <path d="M316 354 L512 464 L708 354" fill="none" stroke="#ffffff" stroke-width="6"/>
+  </g>
+</svg>

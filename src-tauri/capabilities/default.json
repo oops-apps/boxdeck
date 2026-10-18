@@ -1,0 +1,13 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main and approval windows: core plus window dragging for the unified title bar. Plugins are used from Rust, not the frontend.",
+  "windows": [
+    "main",
+    "approval-*"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging"
+  ]
+}
