@@ -28,9 +28,31 @@ Hyper-V needs Vagrant to run as administrator. Start Boxdeck with "Run as admini
 
 GNOME needs the AppIndicator extension to show tray icons. Everything in the tray is also available in the main window.
 
-## "Boxdeck can't be opened" on macOS, or a SmartScreen warning on Windows
+## Unsigned app warnings (macOS and Windows)
 
-Early releases aren't code-signed yet. On macOS, right-click the app, choose **Open**, then **Open** again. On Windows, choose **More info → Run anyway**.
+Boxdeck releases aren't code-signed or notarized yet, so macOS and Windows warn the first time you open them. Every release is built in public by the [Release workflow](https://github.com/oops-apps/boxdeck/actions/workflows/release.yml); if you'd rather not bypass the warning, [build it from source](../README.md#development). You only need to do this once per install.
+
+### macOS: "Boxdeck is damaged and can't be opened"
+
+The file isn't broken: macOS flags unsigned apps downloaded from the internet this way, mostly on Apple Silicon. After dragging Boxdeck to Applications, clear the download flag in Terminal:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Boxdeck.app
+```
+
+### macOS: "Apple could not verify Boxdeck is free of malware"
+
+1. Open Boxdeck once and close the dialog with **Done** (not **Move to Trash**).
+2. Open **System Settings → Privacy & Security**, scroll to **Security** and click **Open Anyway** next to the Boxdeck message.
+3. Open Boxdeck again, choose **Open Anyway** and enter your password.
+
+On macOS 14 and earlier, right-clicking the app and choosing **Open**, then **Open** again, also works.
+
+The standalone `boxdeck-mcp` download gets the same flag. Clear it with `xattr -d com.apple.quarantine boxdeck-mcp`.
+
+### Windows: "Windows protected your PC"
+
+SmartScreen warns about new unsigned apps. Choose **More info → Run anyway**.
 
 ## Agents can't connect
 

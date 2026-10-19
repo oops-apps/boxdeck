@@ -89,11 +89,11 @@ Replace `vmware_desktop` with your provider (`virtualbox`, `parallels`, `libvirt
 
 Download the latest release from [GitHub Releases](https://github.com/oops-apps/boxdeck/releases):
 
-| System  | File                            | First launch                                                                                                                |
-| ------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| macOS   | `.dmg` (Apple Silicon or Intel) | Drag Boxdeck to Applications. Early builds aren't signed: right-click the app, choose **Open**, then **Open** again.        |
-| Windows | `.msi` or `-setup.exe`          | If SmartScreen warns, choose **More info → Run anyway**.                                                                    |
-| Linux   | `.deb`, `.rpm` or `.AppImage`   | Install the package, or `chmod +x` the AppImage and run it. On GNOME, install the AppIndicator extension for the tray icon. |
+| System  | File                            | First launch                                                                                                                                                                            |
+| ------- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| macOS   | `.dmg` (Apple Silicon or Intel) | Drag Boxdeck to Applications. Early builds aren't notarized, so macOS blocks the first launch: see [unsigned app warnings](troubleshooting.md#unsigned-app-warnings-macos-and-windows). |
+| Windows | `.msi` or `-setup.exe`          | Early builds aren't signed. If SmartScreen warns, choose **More info → Run anyway**.                                                                                                    |
+| Linux   | `.deb`, `.rpm` or `.AppImage`   | Install the package, or `chmod +x` the AppImage and run it. On GNOME, install the AppIndicator extension for the tray icon.                                                             |
 
 When Boxdeck starts, it finds `vagrant` on your `PATH` and lists every machine Vagrant knows about. If it can't find Vagrant, it shows these steps; after installing, click **Look again**.
 

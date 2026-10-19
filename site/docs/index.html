@@ -266,8 +266,8 @@ VAGRANT_DEFAULT_PROVIDER=vmware_desktop vagrant status</code></pre>
       <div class="tbl"><table>
         <thead><tr><th>System</th><th>File</th><th>First launch</th></tr></thead>
         <tbody>
-          <tr><td>macOS</td><td><code>.dmg</code> (Apple Silicon or Intel)</td><td>Drag Boxdeck to Applications. Early builds aren't signed: right-click the app, choose <strong>Open</strong>, then <strong>Open</strong> again.</td></tr>
-          <tr><td>Windows</td><td><code>.msi</code> or <code>-setup.exe</code></td><td>If SmartScreen warns, choose <strong>More info → Run anyway</strong>.</td></tr>
+          <tr><td>macOS</td><td><code>.dmg</code> (Apple Silicon or Intel)</td><td>Drag Boxdeck to Applications. Early builds aren't notarized, so macOS blocks the first launch: see <a href="#ts-unsigned">unsigned app warnings</a>.</td></tr>
+          <tr><td>Windows</td><td><code>.msi</code> or <code>-setup.exe</code></td><td>Early builds aren't signed. If SmartScreen warns, choose <strong>More info → Run anyway</strong>.</td></tr>
           <tr><td>Linux</td><td><code>.deb</code>, <code>.rpm</code> or <code>.AppImage</code></td><td>Install the package, or <code>chmod +x</code> the AppImage and run it. On GNOME, install the AppIndicator extension for the tray icon.</td></tr>
         </tbody>
       </table></div>
@@ -366,8 +366,24 @@ VAGRANT_DEFAULT_PROVIDER=vmware_desktop vagrant status</code></pre>
       <h3 id="ts-tray">No tray icon on Linux<a class="anchor" href="#ts-tray" aria-label="Link to this section">#</a></h3>
       <p>GNOME needs the AppIndicator extension to show tray icons. Everything in the tray is also available in the main window.</p>
 
-      <h3 id="ts-unsigned">"Boxdeck can't be opened" on macOS, or a SmartScreen warning on Windows<a class="anchor" href="#ts-unsigned" aria-label="Link to this section">#</a></h3>
-      <p>Early releases aren't code-signed yet. On macOS, right-click the app, choose <strong>Open</strong>, then <strong>Open</strong> again. On Windows, choose <strong>More info → Run anyway</strong>.</p>
+      <h3 id="ts-unsigned">Unsigned app warnings (macOS and Windows)<a class="anchor" href="#ts-unsigned" aria-label="Link to this section">#</a></h3>
+      <p>Boxdeck releases aren't code-signed or notarized yet, so macOS and Windows warn the first time you open them. Every release is built in public by the <a href="https://github.com/oops-apps/boxdeck/actions/workflows/release.yml">Release workflow</a>; if you'd rather not bypass the warning, <a href="https://github.com/oops-apps/boxdeck#development">build it from source</a>. You only need to do this once per install.</p>
+
+      <h4 id="ts-mac-damaged">macOS: "Boxdeck is damaged and can't be opened"<a class="anchor" href="#ts-mac-damaged" aria-label="Link to this section">#</a></h4>
+      <p>The file isn't broken: macOS flags unsigned apps downloaded from the internet this way, mostly on Apple Silicon. After dragging Boxdeck to Applications, clear the download flag in Terminal:</p>
+<pre><code>xattr -dr com.apple.quarantine /Applications/Boxdeck.app</code></pre>
+
+      <h4 id="ts-mac-verify">macOS: "Apple could not verify Boxdeck is free of malware"<a class="anchor" href="#ts-mac-verify" aria-label="Link to this section">#</a></h4>
+      <ol>
+        <li>Open Boxdeck once and close the dialog with <strong>Done</strong> (not <strong>Move to Trash</strong>).</li>
+        <li>Open <strong>System Settings → Privacy &amp; Security</strong>, scroll to <strong>Security</strong> and click <strong>Open Anyway</strong> next to the Boxdeck message.</li>
+        <li>Open Boxdeck again, choose <strong>Open Anyway</strong> and enter your password.</li>
+      </ol>
+      <p>On macOS 14 and earlier, right-clicking the app and choosing <strong>Open</strong>, then <strong>Open</strong> again, also works.</p>
+      <p>The standalone <code>boxdeck-mcp</code> download gets the same flag. Clear it with <code>xattr -d com.apple.quarantine boxdeck-mcp</code>.</p>
+
+      <h4 id="ts-windows">Windows: "Windows protected your PC"<a class="anchor" href="#ts-windows" aria-label="Link to this section">#</a></h4>
+      <p>SmartScreen warns about new unsigned apps. Choose <strong>More info → Run anyway</strong>.</p>
 
       <h3 id="ts-agents">Agents can't connect<a class="anchor" href="#ts-agents" aria-label="Link to this section">#</a></h3>
       <p>Check <strong>Settings → MCP / Agents</strong>: agent access must be on, the status line should say "Listening on …", and the client must send its own token. If the port is taken, Boxdeck says so instead of picking another one; choose a free port and update your client.</p>
