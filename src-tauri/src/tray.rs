@@ -429,47 +429,30 @@ pub fn show_main<R: Runtime>(app: &AppHandle<R>) {
     }
 }
 
-/// A 32×32 template icon (black + alpha): a box with a lid. The lid is filled while any
-/// machine runs. Drawn in code so there are no extra assets to keep in sync.
+/// The menu-bar template (black + alpha): the app icon's cube, its top face lit while any
+/// machine runs. Sources and the export script: `icons/tray/*.svg`, `scripts/export-tray-icons.sh`.
 pub fn icon(running: bool) -> Image<'static> {
-    const N: usize = 32;
-    let mut px = vec![0u8; N * N * 4];
-    let mut set = |x: usize, y: usize| {
-        let i = (y * N + x) * 4;
-        px[i + 3] = 255;
+    let png: &'static [u8] = if running {
+        include_bytes!("../icons/tray/tray-running.png")
+    } else {
+        include_bytes!("../icons/tray/tray.png")
     };
-    let (l, r, t, b) = (5, 26, 7, 25);
-    for x in l..=r {
-        for w in 0..2 {
-            set(x, t + w);
-            set(x, b - w);
-            set(x, 13 + w);
-        }
-    }
-    for y in t..=b {
-        for w in 0..2 {
-            set(l + w, y);
-            set(r - w, y);
-        }
-    }
-    if running {
-        for y in t..13 {
-            for x in l..=r {
-                set(x, y);
-            }
-        }
-    }
-    // A handle notch on the front panel.
-    for x in 13..19 {
-        set(x, 18);
-        set(x, 19);
-    }
-    Image::new_owned(px, N as u32, N as u32)
+    Image::from_bytes(png).expect("bundled tray icon is a valid PNG")
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn tray_icons_decode_as_44px_templates() {
+        for running in [false, true] {
+            let i = icon(running);
+            assert_eq!((i.width(), i.height()), (44, 44));
+            // A template is black; macOS supplies the color from the alpha.
+            assert!(i.rgba().chunks(4).all(|p| p[3] == 0 || p[..3] == [0, 0, 0]));
+        }
+    }
 
     #[test]
     fn running_icon_has_more_ink() {

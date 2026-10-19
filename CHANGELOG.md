@@ -13,6 +13,8 @@ All notable changes to Boxdeck are recorded here. The format follows [Keep a Cha
 
 - The app's look follows the website: state dots (a lit green dot for running), Up and Resume as the main action, a red stop icon on Halt, a tinted selected row, the sweeping progress bar while a job runs, and the website's dark palette.
 - The sidebar uses a monitor icon for Machines and the box icon for Boxes.
+- The macOS menu-bar icon is now the app icon's cube, with its top face lit while machines run.
+- Drag the top edge of the log and terminal panel to resize it; Boxdeck remembers the size.
 
 ## [0.1.0-beta.2] - 2026-10-19
 

@@ -42,7 +42,7 @@ walkdir = "2.5.0"
 which = "8.0.6"
 # Only to name process creation flags; version matches process-wrap's.
 windows = { version = "0.62.2", features = ["Win32_System_Threading"] }
-tauri = { version = "2.12.4", features = ["tray-icon"] }
+tauri = { version = "2.12.4", features = ["tray-icon", "image-png"] }
 tauri-plugin-autostart = "2.7.0"
 tauri-build = "2.7.3"
 tauri-plugin-dialog = "2.8.3"

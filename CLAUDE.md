@@ -20,7 +20,7 @@ Fill these in before M0; they are fixed after.
 - `src-tauri/`: the Tauri app: IPC commands, tray, in-app MCP HTTP endpoint, approval dialogs. Keep it thin; logic belongs in core.
 - `src/`: React UI. Types in `src/ipc/generated/` come from `ts-rs`; never edit them by hand.
 - `tests/fake-vagrant/`: scriptable fake `vagrant` (a Rust bin crate in the workspace) used by integration and e2e tests.
-- `scripts/`: `capture-fixtures` (records real Vagrant output) and `build-sidecar` (builds `boxdeck-mcp` into `src-tauri/binaries/`).
+- `scripts/`: `capture-fixtures` (records real Vagrant output), `build-sidecar` (builds `boxdeck-mcp` into `src-tauri/binaries/`) and `export-tray-icons.sh` (macOS menu-bar PNGs from `src-tauri/icons/tray/*.svg`).
 - `crates/boxdeck-core/tests/fixtures/`: real captured Vagrant outputs. Add a fixture for every parser case.
 - `.testbed/` (gitignored): throwaway Vagrant projects and VMs for local testing. Create test projects here, not in `/tmp`, and destroy their VMs when done.
 

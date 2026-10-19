@@ -1,0 +1,5 @@
+<!-- Same cube with its top face lit while any machine runs. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+  <path fill="#000" stroke="#000" stroke-width="3" stroke-linejoin="round" d="M22 6 36 13.5 22 21 8 13.5z"/>
+  <path fill="none" stroke="#000" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" d="M 22 6 L 36 13.5 L 36 29.5 L 22 37 L 8 29.5 L 8 13.5 Z M 8 13.5 L 22 21 L 36 13.5 M 22 21 L 22 37"/>
+</svg>
