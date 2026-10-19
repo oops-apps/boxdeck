@@ -166,8 +166,9 @@ footer p { flex-basis: 100%; margin: 6px 0 0; color: var(--dim); }
     <a class="sub" href="#build">Building from source</a>
     <div class="grp">AI agents</div>
     <a href="#mcp">Boxdeck for AI agents</a>
-    <a class="sub" href="#mcp-connect">Two ways to connect</a>
+    <a class="sub" href="#mcp-connect">Connecting a client</a>
     <a class="sub" href="#mcp-levels">Access levels</a>
+    <a class="sub" href="#mcp-shell">Shell access inside VMs</a>
     <a class="sub" href="#mcp-approvals">Approvals</a>
     <a class="sub" href="#mcp-projects">Projects</a>
     <a class="sub" href="#mcp-audit">Pausing and auditing</a>
@@ -282,30 +283,28 @@ VAGRANT_DEFAULT_PROVIDER=vmware_desktop vagrant status</code></pre>
     <section class="guide" id="mcp">
       <span class="count">AI agents</span>
       <h2>Boxdeck for AI agents (MCP)<a class="anchor" href="#mcp" aria-label="Link to this section">#</a></h2>
-      <p>Boxdeck includes a <a href="https://modelcontextprotocol.io">Model Context Protocol</a> server, so AI agents and coding assistants can list, start, stop and inspect your Vagrant machines. Agents use the same code paths as the app, and you decide what they may do.</p>
+      <p>Boxdeck includes a <a href="https://modelcontextprotocol.io">Model Context Protocol</a> server, so AI agents and coding assistants can list, start, stop and inspect your Vagrant machines, and, if you allow it, run commands and move files inside them. Agents use the same code paths as the app, and you decide what they may do.</p>
       <div class="note"><p>Agent access is <strong>off</strong> until you turn it on in <strong>Settings → MCP / Agents</strong>.</p></div>
 
-      <h3 id="mcp-connect">Two ways to connect<a class="anchor" href="#mcp-connect" aria-label="Link to this section">#</a></h3>
+      <h3 id="mcp-connect">Connecting a client<a class="anchor" href="#mcp-connect" aria-label="Link to this section">#</a></h3>
+      <p>Under <strong>Settings → MCP / Agents → Connect a client</strong>, click <strong>Connect</strong> next to your client:</p>
       <div class="tbl"><table>
-        <thead><tr><th></th><th>HTTP (recommended)</th><th>stdio</th></tr></thead>
+        <thead><tr><th>Client</th><th>Config file Boxdeck edits</th></tr></thead>
         <tbody>
-          <tr><td>How</td><td class="wrap-code"><code>http://127.0.0.1:47816/mcp</code> with an <code>Authorization: Bearer &lt;token&gt;</code> header</td><td>The client starts the bundled <code>boxdeck-mcp</code> program</td></tr>
-          <tr><td>Needs the app running</td><td>Yes</td><td>No</td></tr>
-          <tr><td>Destructive tools</td><td>Asked in a Boxdeck window each time</td><td>Refused, unless you allow them for headless mode</td></tr>
-          <tr><td>Shows up in Activity</td><td>Live</td><td>Afterwards, from the shared audit log</td></tr>
+          <tr><td>Claude Code</td><td><code>~/.claude.json</code></td></tr>
+          <tr><td>Claude Desktop</td><td class="wrap-code"><code>claude_desktop_config.json</code> in <code>~/Library/Application Support/Claude</code> (macOS), <code>%APPDATA%\Claude</code> (Windows) or <code>~/.config/Claude</code> (Linux)</td></tr>
+          <tr><td>Cursor</td><td><code>~/.cursor/mcp.json</code></td></tr>
+          <tr><td>Gemini CLI</td><td><code>~/.gemini/settings.json</code></td></tr>
+          <tr><td>Codex</td><td><code>~/.codex/config.toml</code> (or <code>$CODEX_HOME/config.toml</code>)</td></tr>
         </tbody>
       </table></div>
-      <p>Each client gets its <strong>own token</strong> (Settings → MCP / Agents → Clients → Add client), so you can rotate or revoke one without affecting the others. Settings shows ready-to-copy snippets, including a <code>claude mcp add</code> command for Claude Code.</p>
+      <p>Connect adds one <code>boxdeck</code> entry that starts the <code>boxdeck-mcp</code> program bundled with the app. It keeps everything else in the file, including key order and comments, and <strong>Disconnect</strong> removes only that entry. Restart the client afterwards. If you move or update Boxdeck and the stored path goes stale, the row shows <strong>Reconnect</strong>.</p>
+      <p>There is no token and no network port. The client starts <code>boxdeck-mcp</code> itself over stdio, and <code>boxdeck-mcp</code> reads the same settings as the app. For any other client, copy the snippet from the same page:</p>
 <pre><code>{
   "mcpServers": {
-    "boxdeck": {
-      "type": "http",
-      "url": "http://127.0.0.1:47816/mcp",
-      "headers": { "Authorization": "Bearer &lt;token&gt;" }
-    }
+    "boxdeck": { "command": "/Applications/Boxdeck.app/Contents/MacOS/boxdeck-mcp", "args": [] }
   }
 }</code></pre>
-      <p>For stdio, point the client at <code>boxdeck-mcp</code> inside the app bundle (Settings shows the exact path). It reads the same settings as the app.</p>
 
       <h3 id="mcp-levels">Access levels<a class="anchor" href="#mcp-levels" aria-label="Link to this section">#</a></h3>
       <div class="tbl"><table>
@@ -313,31 +312,59 @@ VAGRANT_DEFAULT_PROVIDER=vmware_desktop vagrant status</code></pre>
         <tbody>
           <tr><td><strong>Read</strong> (default)</td><td class="wrap-code"><code>list_machines</code>, <code>get_machine_status</code>, <code>get_machine_details</code>, <code>list_boxes</code>, <code>check_box_updates</code>, <code>read_vagrantfile</code>, <code>validate_vagrantfile</code>, <code>get_job</code>, <code>list_jobs</code></td></tr>
           <tr><td><strong>Operate</strong></td><td class="wrap-code">Read, plus <code>machine_up</code>, <code>machine_halt</code>, <code>machine_suspend</code>, <code>machine_resume</code>, <code>machine_reload</code>, <code>machine_provision</code>, <code>box_add</code>, <code>box_update</code>, <code>cancel_job</code> (only jobs the agent started)</td></tr>
-          <tr><td><strong>Full</strong></td><td class="wrap-code">Operate, plus <code>machine_destroy</code>, <code>box_remove</code>, <code>box_prune</code>, <code>write_vagrantfile</code>, each approved by you; and <code>ssh_exec</code> if you turn it on separately</td></tr>
+          <tr><td><strong>Full</strong></td><td class="wrap-code">Operate, plus <code>machine_destroy</code>, <code>box_remove</code>, <code>box_prune</code>, <code>write_vagrantfile</code>, each approved by you</td></tr>
         </tbody>
       </table></div>
-      <p>Every tool carries MCP annotations (<code>readOnlyHint</code>, <code>destructiveHint</code>, <code>idempotentHint</code>) so clients can show and gate them.</p>
+      <p>Every tool carries MCP annotations (<code>readOnlyHint</code>, <code>destructiveHint</code>, <code>idempotentHint</code>, <code>openWorldHint</code>) so clients can show and gate them.</p>
       <p>Long actions such as <code>vagrant up</code> run as jobs. Action tools wait up to <code>wait_seconds</code> (default 60, max 600) and then return the result, or a job id to poll with <code>get_job</code>. Clients that send a progress token get Vagrant's output as progress notifications.</p>
 
+      <h3 id="mcp-shell">Shell access inside VMs<a class="anchor" href="#mcp-shell" aria-label="Link to this section">#</a></h3>
+      <p>With <strong>Shell access in VMs</strong> turned on (it needs Operate), agents get three more tools:</p>
+      <ul>
+        <li><code>ssh_exec</code> runs a shell command in a running VM through <code>vagrant ssh -c</code>, optionally in a <code>cwd</code>. It returns stdout, stderr and the exit code. A command still running after <code>wait_seconds</code> becomes a job to poll with <code>get_job</code>; <code>timeout_seconds</code> (default 600, max 3600) stops it. Each stream returns at most its last 200 KB, with <code>truncated</code> set when output was cut.</li>
+        <li><code>vm_upload</code> copies a file or folder from the project folder into the VM (<code>vagrant upload</code>).</li>
+        <li><code>vm_download</code> returns a text file from the VM (up to 1 MB), or saves any file under the project folder with <code>save_to</code> (up to 50 MB).</li>
+      </ul>
+      <p>Agents get full control inside the VM. On the host they can only reach the project folder: upload sources and download destinations must stay inside it, symlinks included.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Mode</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Off</strong></td><td>Shell tools are refused (default).</td></tr>
+          <tr><td><strong>Ask once</strong></td><td>A VM with a two-way synced folder can change files on your computer. The first shell call to such a VM asks you; <strong>Allow for this session</strong> trusts that VM until Boxdeck restarts. VMs with no synced folders, or only rsync ones, don't ask.</td></tr>
+          <tr><td><strong>Always</strong></td><td>No questions.</td></tr>
+        </tbody>
+      </table></div>
+      <p>Each project can override the mode under <strong>Settings → Projects</strong>. Machines you allowed for the session are listed under the setting, each with <strong>Revoke</strong>. Boxdeck reads which folders are synced from Vagrant's own record in <code>.vagrant/machines/&lt;name&gt;/&lt;provider&gt;/synced_folders</code>. When there's no record yet, it asks.</p>
+
       <h3 id="mcp-approvals">Approvals<a class="anchor" href="#mcp-approvals" aria-label="Link to this section">#</a></h3>
-      <p>When an agent calls a destructive tool over HTTP, Boxdeck opens a small window naming the agent, the tool, the project, the machine and the exact arguments. <strong>Deny</strong> is the default button, and no answer within two minutes counts as a denial.</p>
+      <p>Boxdeck opens a small window naming the agent, the tool, the project, the machine and the exact arguments:</p>
+      <ul>
+        <li>for every destructive tool (Full level)</li>
+        <li>for the first shell call to a VM that can change host files (Ask once)</li>
+      </ul>
+      <p><strong>Deny</strong> is the default button, and no answer within two minutes counts as a denial.</p>
+      <p><code>boxdeck-mcp</code> sends these requests to the app through files in Boxdeck's data folder, which only your user account can read. <strong>If the app isn't running, nobody can answer</strong>, so those calls are refused with a message telling the agent to open Boxdeck. Two switches under <strong>When Boxdeck isn't running</strong> change that, both off by default:</p>
+      <ul>
+        <li><strong>Allow shell access without asking</strong>: Ask once lets calls through instead.</li>
+        <li><strong>Allow destructive tools without approval</strong>: agents can then destroy machines with nobody asked.</li>
+      </ul>
 
       <h3 id="mcp-projects">Projects<a class="anchor" href="#mcp-projects" aria-label="Link to this section">#</a></h3>
       <p>Every project follows the global setting (all projects, or only the ones you allow) unless you set it to <strong>Allow</strong> or <strong>Deny</strong> under Settings → Projects. Agents can't see denied projects at all.</p>
 
       <h3 id="mcp-audit">Pausing and auditing<a class="anchor" href="#mcp-audit" aria-label="Link to this section">#</a></h3>
       <ul>
-        <li><strong>Pause Agent Access</strong> in the tray menu refuses every call at once, in both the app and a running <code>boxdeck-mcp</code>.</li>
+        <li><strong>Pause Agent Access</strong> in the tray menu refuses every call at once in every running <code>boxdeck-mcp</code>.</li>
         <li>Every call, allowed or not, is appended to <code>audit.jsonl</code> in Boxdeck's data folder with the time, client, tool, arguments, decision and result. Activity → Agent calls shows it.</li>
       </ul>
 
       <h3 id="mcp-security">Security notes<a class="anchor" href="#mcp-security" aria-label="Link to this section">#</a></h3>
       <ul>
-        <li>The HTTP server listens on <code>127.0.0.1</code> only, checks the <code>Host</code> header against loopback names (against DNS-rebinding attacks from web pages), rejects browser <code>Origin</code>s other than localhost, and requires a token on every request.</li>
-        <li>There is no generic "run a vagrant command" tool. Inputs are checked against known projects, known machine names and allowlisted values before Vagrant runs.</li>
+        <li>Boxdeck opens no network port for agents. Only programs running as you can start <code>boxdeck-mcp</code> or write to the data folder, and those programs could already run <code>vagrant</code> directly.</li>
+        <li>There is no generic "run a vagrant command" tool. Inputs are checked against known projects, known machine names and allowlisted values before Vagrant runs. <code>ssh_exec</code>'s command is the only free-form input.</li>
         <li><code>get_machine_details</code> returns SSH host, port and user only. Private keys are never read.</li>
       </ul>
-      <div class="note warn"><p><strong>Tool output is untrusted.</strong> VM logs, Vagrantfile contents and <code>ssh_exec</code> output can contain text written to steer an agent. Boxdeck can't control what an agent does with it, so it limits the damage instead: access levels, approvals, per-project deny and the pause switch. Keep <code>ssh_exec</code> off unless you need it.</p></div>
+      <div class="note warn"><p><strong>Tool output is untrusted.</strong> VM logs, Vagrantfile contents and <code>ssh_exec</code> output can contain text written to steer an agent. Boxdeck can't control what an agent does with it, so it limits the damage instead: access levels, shell mode, approvals, per-project deny and the pause switch.</p></div>
     </section>
 
     <!-- docs/troubleshooting.md -->
@@ -386,7 +413,7 @@ VAGRANT_DEFAULT_PROVIDER=vmware_desktop vagrant status</code></pre>
       <p>SmartScreen warns about new unsigned apps. Choose <strong>More info → Run anyway</strong>.</p>
 
       <h3 id="ts-agents">Agents can't connect<a class="anchor" href="#ts-agents" aria-label="Link to this section">#</a></h3>
-      <p>Check <strong>Settings → MCP / Agents</strong>: agent access must be on, the status line should say "Listening on …", and the client must send its own token. If the port is taken, Boxdeck says so instead of picking another one; choose a free port and update your client.</p>
+      <p>Check <strong>Settings → MCP / Agents</strong>: agent access must be on, and the client's row under <strong>Connect a client</strong> should say <strong>Connected</strong>. Restart the client after connecting. If the row says <strong>Points to an old copy of Boxdeck</strong> (you moved or reinstalled the app), click <strong>Reconnect</strong>. If an agent says a call needs approval, open the Boxdeck app: approvals only work while it's running.</p>
     </section>
 
     <!-- docs/architecture.md -->
@@ -395,15 +422,17 @@ VAGRANT_DEFAULT_PROVIDER=vmware_desktop vagrant status</code></pre>
       <h2>Architecture<a class="anchor" href="#architecture" aria-label="Link to this section">#</a></h2>
       <p>Boxdeck is a Cargo workspace plus a React frontend.</p>
 <pre class="diagram"><code>React UI (src/)  ──invoke / Channel──►  Tauri app (src-tauri/)  ──►  boxdeck-core  ──►  vagrant CLI
-                                          │  tray, approvals,           ▲
-                                          │  MCP over HTTP ─────────────┤
-MCP clients ──stdio──► boxdeck-mcp ───────────────────────────────────────┘</code></pre>
+                                          tray, approval windows       ▲
+                                                  ▲                    │
+                                   approval requests (data folder)    │
+                                                  │                    │
+MCP clients ──stdio──► boxdeck-mcp ───────────────┴────────────────────┘</code></pre>
       <div class="tbl"><table>
         <thead><tr><th>Crate / folder</th><th>Role</th></tr></thead>
         <tbody>
           <tr><td><code>crates/boxdeck-core</code></td><td>Everything that knows about Vagrant: locating it, parsing <code>--machine-readable</code> output, reading the machine index (read-only, under a shared lock), the job runner (queues, per-machine locks, cancel), boxes, settings, the MCP access policy and the audit log. No Tauri dependency.</td></tr>
           <tr><td><code>crates/boxdeck-mcp</code></td><td>The MCP tools (via <code>rmcp</code>) on top of core, plus the <code>boxdeck-mcp</code> stdio binary.</td></tr>
-          <tr><td><code>src-tauri</code></td><td>The desktop app: IPC commands, tray, the in-app MCP HTTP endpoint, approval windows. Thin glue over core.</td></tr>
+          <tr><td><code>src-tauri</code></td><td>The desktop app: IPC commands, tray, approval windows and Connect for MCP clients. Thin glue over core.</td></tr>
           <tr><td><code>src</code></td><td>React + TypeScript UI. Types in <code>src/ipc/generated/</code> are generated from Rust with <code>ts-rs</code> (<code>npm run gen:types</code>).</td></tr>
           <tr><td><code>tests/fake-vagrant</code></td><td>A scriptable stand-in for <code>vagrant</code>, used by integration tests.</td></tr>
         </tbody>

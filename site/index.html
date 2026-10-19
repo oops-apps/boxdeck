@@ -50,7 +50,8 @@
         { "@type": "Question", "name": "Is there a GUI for Vagrant?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Boxdeck is a free, open-source desktop GUI for HashiCorp Vagrant on macOS, Windows and Linux. It lists every Vagrant machine on your computer and lets you start, stop, provision and SSH into them from a window or the menu bar." } },
         { "@type": "Question", "name": "Does Boxdeck replace the vagrant command?", "acceptedAnswer": { "@type": "Answer", "text": "No. Boxdeck runs the vagrant you already have installed (2.3 or newer), so your Vagrantfiles and terminal workflow keep working exactly as before." } },
         { "@type": "Question", "name": "Which Vagrant providers does Boxdeck support?", "acceptedAnswer": { "@type": "Answer", "text": "Any provider Vagrant supports, including VMware Desktop, VirtualBox, Docker, Hyper-V and libvirt. It is tested with VMware Desktop (VMware Fusion) and Docker." } },
-        { "@type": "Question", "name": "Can AI agents manage Vagrant machines with Boxdeck?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Boxdeck includes an MCP server that is off by default. You choose Read, Operate or Full access per client, destructive actions need your approval, and every call is written to an audit log." } },
+        { "@type": "Question", "name": "Can AI agents manage Vagrant machines with Boxdeck?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Boxdeck includes an MCP server that is off by default. Connect Claude Code, Claude Desktop, Cursor, Gemini CLI or Codex with one click, with no token to copy. You choose Read, Operate or Full access, destructive actions need your approval, and every call is written to an audit log." } },
+        { "@type": "Question", "name": "Can AI agents run commands inside my VMs?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, if you turn on shell access. Agents can then run commands, copy files in and out, and follow long builds as jobs. A VM with synced folders can change files on your computer, so by default Boxdeck asks you once per such VM; files agents copy stay inside the project folder." } },
         { "@type": "Question", "name": "Is Boxdeck free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Boxdeck is free and open source under the MIT license." } },
         { "@type": "Question", "name": "Is Boxdeck made by HashiCorp?", "acceptedAnswer": { "@type": "Answer", "text": "No. Boxdeck is an independent open-source project and is not affiliated with or endorsed by HashiCorp. It ships none of Vagrant's code." } }
       ]
@@ -329,7 +330,11 @@ h2 { font-size: clamp(34px, 4.6vw, 56px); line-height: 1.05; letter-spacing: -.0
 .final .cta { justify-content: center; }
 
 footer .logo { padding-left: 0; }
-.faq { display: grid; gap: 8px; margin-top: 36px; max-width: 860px; }
+/* Heading beside the questions on wide screens, so the list doesn't leave half the page empty. */
+.faq-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); gap: 32px 64px; align-items: start; }
+.faq-head { position: sticky; top: 110px; }
+.faq-head h2 { margin-bottom: 10px; }
+.faq { display: grid; gap: 8px; }
 .faq details { border-radius: 14px; background: var(--raise); box-shadow: inset 0 0 0 1px var(--line); }
 .faq summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 12px; padding: 18px 22px; font: 500 16px var(--sans); }
 .faq summary::-webkit-details-marker { display: none; }
@@ -354,6 +359,8 @@ footer p { flex-basis: 100%; margin: 6px 0 0; }
   .hero-grid { grid-template-columns: 1fr; gap: 0; }
   .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .agents { grid-template-columns: 1fr; }
+  .faq-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .faq-head { position: static; }
 }
 @media (max-width: 680px) {
   .wrap { padding: 0 16px; }
@@ -628,17 +635,18 @@ active
   <div class="wrap">
     <span class="count">MCP server · off by default</span>
     <h2 class="rv">Let your AI agent run the VMs, on your terms</h2>
-    <p class="sub rv">Claude, Cursor and other MCP clients can list, start and inspect your machines. You decide how far each one can go.</p>
+    <p class="sub rv">Claude, Cursor, Codex and other MCP clients can list, start and inspect your machines, and run commands inside them. You decide how far they can go.</p>
     <div class="agents">
       <div class="panel rv">
         <div class="levels">
           <div class="lv rd"><b>Read</b><span>List machines and boxes, read Vagrantfiles, check jobs. The default.</span></div>
-          <div class="lv op"><b>Operate</b><span>Also up, halt, suspend, reload, provision, and add or update boxes.</span></div>
+          <div class="lv op"><b>Operate</b><span>Also up, halt, suspend, reload, provision, add or update boxes and, if you turn it on, run commands and copy files inside VMs.</span></div>
           <div class="lv fl"><b>Full</b><span>Also destroy, remove boxes and write Vagrantfiles, each one approved by you.</span></div>
         </div>
         <div class="extras">
           <span class="chip">Per-project rules</span>
-          <span class="chip">A token per client</span>
+          <span class="chip">One-click Connect</span>
+          <span class="chip">Shell access, ask once</span>
           <span class="chip">Pause switch</span>
           <span class="chip">Audit log</span>
         </div>
@@ -666,14 +674,18 @@ active
 </section>
 
 <section id="faq">
-  <div class="wrap">
-    <span class="count">FAQ</span>
-    <h2 class="rv">Questions, answered</h2>
+  <div class="wrap faq-grid">
+    <div class="faq-head">
+      <span class="count">FAQ</span>
+      <h2 class="rv">Questions, answered</h2>
+      <p class="sub rv">Anything else? The <a href="docs/">docs</a> go deeper.</p>
+    </div>
     <div class="faq">
       <details class="rv"><summary>Is there a GUI for Vagrant?</summary><p>Yes. Boxdeck is a free, open-source desktop GUI for HashiCorp Vagrant on macOS, Windows and Linux. It lists every Vagrant machine on your computer and lets you start, stop, provision and SSH into them from a window or the menu bar.</p></details>
       <details class="rv"><summary>Does Boxdeck replace the vagrant command?</summary><p>No. Boxdeck runs the <code>vagrant</code> you already have installed (2.3 or newer), so your Vagrantfiles and terminal workflow keep working exactly as before.</p></details>
       <details class="rv"><summary>Which Vagrant providers does it support?</summary><p>Any provider Vagrant supports, including VMware Desktop, VirtualBox, Docker, Hyper-V and libvirt. It is tested with VMware Desktop (VMware Fusion) and Docker.</p></details>
-      <details class="rv"><summary>Can AI agents manage Vagrant machines with Boxdeck?</summary><p>Yes. Boxdeck includes an MCP server that is off by default. You choose Read, Operate or Full access per client, destructive actions need your approval, and every call is written to an audit log.</p></details>
+      <details class="rv"><summary>Can AI agents manage Vagrant machines with Boxdeck?</summary><p>Yes. Boxdeck includes an MCP server that is off by default. Connect Claude Code, Claude Desktop, Cursor, Gemini CLI or Codex with one click, with no token to copy. You choose Read, Operate or Full access, destructive actions need your approval, and every call is written to an audit log.</p></details>
+      <details class="rv"><summary>Can AI agents run commands inside my VMs?</summary><p>Yes, if you turn on shell access. Agents can then run commands, copy files in and out, and follow long builds as jobs. A VM with synced folders can change files on your computer, so by default Boxdeck asks you once per such VM; files agents copy stay inside the project folder.</p></details>
       <details class="rv"><summary>Is Boxdeck free?</summary><p>Yes. Boxdeck is free and open source under the MIT license.</p></details>
       <details class="rv"><summary>Is Boxdeck made by HashiCorp?</summary><p>No. Boxdeck is an independent open-source project and is not affiliated with or endorsed by HashiCorp. It ships none of Vagrant's code.</p></details>
     </div>
