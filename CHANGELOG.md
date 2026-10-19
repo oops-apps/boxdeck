@@ -4,6 +4,22 @@ All notable changes to Boxdeck are recorded here. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+### Added
+
+- Agents can work inside VMs: `ssh_exec` runs a command (optionally in a folder) and returns its output, or a job to follow when it runs long; `vm_upload` and `vm_download` copy files between the VM and the project folder. Turn it on under Settings → MCP / Agents → Shell access in VMs; it needs Operate access.
+- Shell access asks once per VM whose synced folders can change files on your computer, with **Allow for this session**. Each project can override the mode, and session grants can be revoked in Settings.
+- One-click **Connect** for Claude Code, Claude Desktop, Cursor, Gemini CLI and Codex. Boxdeck adds only its own entry to the client's config, keeps everything else, and offers **Reconnect** when the app has moved.
+
+### Changed
+
+- Agents connect over stdio only, with no token. Approvals reach the app through Boxdeck's data folder, so nothing listens on a network port.
+- Settings migrate automatically: if `ssh_exec` was on, shell access becomes Ask once.
+- New switch to allow shell access while the Boxdeck app isn't running, separate from the one for destructive tools.
+
+### Removed
+
+- The in-app HTTP endpoint, its port setting and per-client tokens. Clients set up with the HTTP URL stop connecting: use Connect in Settings → MCP / Agents, then restart the client.
+
 ## [0.1.0-beta.4] - 2026-10-19
 
 ### Changed
