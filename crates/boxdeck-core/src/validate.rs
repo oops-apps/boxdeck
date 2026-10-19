@@ -116,6 +116,9 @@ pub fn guest_path(path: &str) -> Result<()> {
 /// Resolves a host path for file transfer, relative to the project, and checks that it stays
 /// inside it (after symlinks). Agents may move files between the VM and the project folder, not
 /// anywhere else on the host. With `existing = false` only the parent has to exist.
+///
+/// The result is under `project` as given, not the canonical form: on Windows that is a `\\?\`
+/// verbatim path, which Vagrant's Ruby tools don't handle.
 pub fn inside(project: &Path, path: &str, existing: bool) -> Result<PathBuf> {
     let outside = || Error::invalid("host path", "must be inside the project folder");
     let root = project.canonicalize().map_err(|_| outside())?;
@@ -131,10 +134,9 @@ pub fn inside(project: &Path, path: &str, existing: bool) -> Result<PathBuf> {
         let parent = joined.parent().ok_or_else(outside)?;
         parent.canonicalize().map_err(|_| outside())?.join(name)
     };
-    if resolved.starts_with(&root) && resolved != root {
-        Ok(resolved)
-    } else {
-        Err(outside())
+    match resolved.strip_prefix(&root) {
+        Ok(rel) if !rel.as_os_str().is_empty() => Ok(project.join(rel)),
+        _ => Err(outside()),
     }
 }
 
@@ -198,15 +200,19 @@ mod tests {
         std::fs::write(dir.path().join("secret"), "x").unwrap();
         let root = project.canonicalize().unwrap();
 
+        // Under the project path as given (never `\\?\` on Windows), even for absolute input.
         assert_eq!(
             inside(&project, "sub/a.txt", true).unwrap(),
-            root.join("sub/a.txt")
+            project.join("sub").join("a.txt")
         );
         let abs = root.join("sub/a.txt");
-        assert!(inside(&project, abs.to_str().unwrap(), true).is_ok());
+        assert_eq!(
+            inside(&project, abs.to_str().unwrap(), true).unwrap(),
+            project.join("sub").join("a.txt")
+        );
         assert_eq!(
             inside(&project, "sub/new.bin", false).unwrap(),
-            root.join("sub/new.bin")
+            project.join("sub").join("new.bin")
         );
         for bad in [
             "../secret",

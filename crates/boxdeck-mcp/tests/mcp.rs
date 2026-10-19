@@ -569,15 +569,12 @@ async fn vm_upload_only_sends_files_from_the_project() {
         )
         .await;
     assert_eq!(r.is_error, Some(false), "{r:?}");
-    let tail = r.structured_content.unwrap()["log_tail"].to_string();
+    // Compare the lines themselves: JSON text would escape Windows backslashes.
+    let tail: Vec<String> =
+        serde_json::from_value(r.structured_content.unwrap()["log_tail"].clone()).unwrap();
     let source = h.project.join("build.tar");
-    assert!(
-        tail.contains(&format!(
-            "upload {} /tmp/build.tar web --no-tty",
-            source.display()
-        )),
-        "{tail}"
-    );
+    let expected = format!("upload {} /tmp/build.tar web --no-tty", source.display());
+    assert!(tail.contains(&expected), "{tail:?}");
     let jobs = h.jobs.list().len();
     let r = h
         .call(
