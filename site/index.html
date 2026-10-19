@@ -173,16 +173,16 @@ h1 { font-size: clamp(44px, 7vw, 92px); line-height: 1.02; letter-spacing: -.035
 .card { border-radius: 9px; background: #18181a; box-shadow: inset 0 0 0 1px var(--line); margin-bottom: 10px; overflow: hidden; }
 .card-h { display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-weight: 600; border-bottom: 1px solid var(--line); }
 .card-h > i { width: 8px; height: 8px; border-radius: 50%; }
-.card-h small { color: var(--muted); font: 400 11px var(--mono); }
+.card-h small { color: var(--muted); font: 400 11.5px var(--sans); }
 .card-h .when { margin-left: auto; font-size: 11px; font-weight: 400; color: var(--muted); }
 .chev, .ic { display: inline-flex; color: var(--muted); }
-.chev svg { width: 12px; height: 12px; }
+.chev svg { width: 12px; height: 12px; transform: rotate(90deg); }
+.mini svg.dn, .dock .col svg { transform: rotate(90deg); }
+.acts svg.red { color: var(--danger); }
 .ic svg { width: 14px; height: 14px; }
 .row { display: grid; grid-template-columns: 14px 110px minmax(0, 1fr) auto 16px; gap: 12px; align-items: center; padding: 7px 10px; }
 .row + .row { border-top: 1px solid var(--line); }
-.row.sel { background: rgba(141,162,245,.09); }
 .chk { width: 13px; height: 13px; border-radius: 3px; box-shadow: inset 0 0 0 1px var(--line-2); }
-.chk.on { background: #4d6cdf; box-shadow: none; }
 .st { display: flex; align-items: center; gap: 8px; font: 12px var(--mono); color: var(--muted); }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); flex: none; }
 .dot.run { background: var(--ok); box-shadow: 0 0 0 3px rgba(76,200,132,.18); }
@@ -197,9 +197,11 @@ h1 { font-size: clamp(44px, 7vw, 92px); line-height: 1.02; letter-spacing: -.035
 .acts span.p { background: #4d6cdf; color: #fff; box-shadow: none; }
 .acts span.off { opacity: .45; }
 .dock { background: #0b0b0d; border-top: 1px solid var(--line); font: 12px/1.6 var(--mono); color: #e6e6ea; padding-bottom: 14px; }
-.dock .dt { display: flex; gap: 2px; padding: 4px 6px; border-bottom: 1px solid var(--line); background: #141416; }
+.dock .dt { display: flex; align-items: center; gap: 2px; overflow: hidden; white-space: nowrap; padding: 4px 6px; border-bottom: 1px solid var(--line); background: #141416; }
 .dock .dt span { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 6px; color: var(--muted); font: 12px var(--sans); }
 .dock .dt span.on { background: rgba(255,255,255,.07); color: #fff; }
+.dock .dt svg.x { width: 10px; height: 10px; margin-left: 2px; opacity: .7; }
+.dock .dt .col { margin-left: auto; display: inline-flex; padding: 0 6px; color: var(--muted); }
 .dock .dh { position: relative; display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 34px; border-bottom: 1px solid var(--line); background: #141416; font: 12px var(--sans); }
 .dock .dh code { font: 12px var(--mono); color: var(--muted); }
 .dock .dh .mini { margin-left: auto; height: 22px; font-size: 11.5px; }
@@ -246,10 +248,24 @@ h1 { font-size: clamp(44px, 7vw, 92px); line-height: 1.02; letter-spacing: -.035
 .btnrow span { font-size: 12px; padding: 6px 12px; border-radius: 8px; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); color: #e6e6e6; }
 .btnrow span.hot { background: #4d6cdf; box-shadow: 0 8px 20px -8px #4d6cdf; color: #fff; }
 .btnrow span.del { color: var(--danger); }
-.bars { display: grid; gap: 10px; }
-.bars div { display: grid; grid-template-columns: 1fr 56px; gap: 8px; align-items: end; font: 11px var(--mono); }
-.bars i { display: block; height: 6px; border-radius: 4px; background: linear-gradient(90deg, #c0cef2, #feeae1); margin-top: 5px; }
-.bars span:last-child { text-align: right; color: var(--muted); }
+.tbl { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; column-gap: 14px; font-size: 11.5px; }
+.tbl span { padding: 6px 2px; border-top: 1px solid rgba(255,255,255,.05); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tbl span:nth-child(3n+2) { text-align: right; }
+.tbl .h { border-top: 0; padding-top: 0; color: var(--muted); font-size: 11px; }
+.tbl .d { color: var(--muted); }
+.tbl small.w { display: block; color: var(--warn); font-size: 10.5px; }
+.menu { font-size: 12.5px; padding: 0 2px; }
+.menu .mi { display: flex; padding: 3px 8px; border-radius: 5px; white-space: pre; }
+.menu .mi span { margin-left: auto; padding-left: 18px; color: var(--muted); }
+.menu .mi.off { color: var(--dim); }
+.menu hr { border: 0; border-top: 1px solid rgba(255,255,255,.08); margin: 4px 8px; }
+/* These screens bleed off the right edge; keep their last column in view. */
+.tbl, .ui .eh { margin-right: 30px; }
+.ui .eh { padding: 0 0 8px; }
+.ui .eh b { margin-right: auto; font-weight: 600; }
+.ui .eh .mini { height: 22px; padding: 0 9px; font-size: 11px; }
+.ui .mini.hot { background: #4d6cdf; color: #fff; box-shadow: none; }
+.okbar { margin: 0 -12px 8px; padding: 5px 12px; background: rgba(76,200,132,.1); color: var(--ok); font-size: 11.5px; font-weight: 500; }
 .prog { height: 4px; border-radius: 4px; background: rgba(255,255,255,.08); margin: 8px 4px 2px; overflow: hidden; }
 .prog i { display: block; height: 100%; background: linear-gradient(90deg, #8da2f5, #c0cef2); animation: load 2.6s cubic-bezier(.65,0,.35,1) infinite; }
 @keyframes load { from { width: 8%; } to { width: 96%; } }
@@ -282,14 +298,17 @@ h2 { font-size: clamp(34px, 4.6vw, 56px); line-height: 1.05; letter-spacing: -.0
 .stage { border-radius: 18px; overflow: hidden; background: var(--scene); box-shadow: inset 0 0 0 1px var(--line); padding: 40px; display: grid; gap: 14px; align-content: center; }
 .chat { position: relative; z-index: 3; font: 13px/1.75 var(--mono); background: rgba(10,10,12,.78); border-radius: 12px; padding: 16px 18px; box-shadow: 0 0 0 1px rgba(255,255,255,.07); }
 .dlg { position: relative; z-index: 3; background: rgba(22,22,24,.94); border-radius: 14px; padding: 20px; box-shadow: 0 0 0 1px rgba(255,255,255,.1), 0 30px 60px -20px rgba(0,0,0,.9); }
-.dlg .ttl { margin: 0 0 4px; font: 500 16px var(--sans); display: flex; align-items: center; gap: 8px; }
+.dlg .ttl { margin: 0 0 14px; font: 500 16px var(--sans); display: flex; align-items: center; gap: 8px; }
 .dlg .ttl i { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 10px var(--danger); }
-.dlg p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
-.dlg dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 13px; background: rgba(255,255,255,.04); border-radius: 10px; padding: 12px 14px; margin: 0 0 16px; }
+.dlg p { margin: 0 0 4px; color: var(--muted); font-size: 12px; }
+.dlg pre { margin: 0 0 16px; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px var(--line); font: 11.5px/1.5 var(--mono); overflow: hidden; }
+.dlg dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 13px; background: rgba(255,255,255,.04); border-radius: 10px; padding: 12px 14px; margin: 0 0 12px; }
 .dlg dt { color: var(--dim); }
-.dlg dd { margin: 0; font-family: var(--mono); }
-.dlg .bt { display: flex; justify-content: flex-end; gap: 8px; }
-.dlg .bt span { height: 34px; padding: 0 16px; border-radius: 999px; display: inline-flex; align-items: center; font-size: 13px; font-weight: 500; box-shadow: inset 0 0 0 1px var(--line-2); }
+.dlg dd { margin: 0; font-weight: 500; }
+.dlg dd.mono { font: 400 12.5px var(--mono); }
+.dlg .bt { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.dlg .bt small { margin-right: auto; color: var(--muted); font-size: 12px; }
+.dlg .bt span { height: 32px; padding: 0 14px; border-radius: 7px; display: inline-flex; align-items: center; font-size: 13px; font-weight: 500; box-shadow: inset 0 0 0 1px var(--line-2); }
 .dlg .bt span.x { background: var(--danger); color: #1d0605; box-shadow: none; }
 
 /* Get started */
@@ -343,6 +362,7 @@ footer p { flex-basis: 100%; margin: 6px 0 0; }
   .win-body { grid-template-columns: 1fr; }
   .side, .search, .toolbar .mini:not(.p) { display: none; }
   .row { grid-template-columns: 14px 1fr auto; }
+  .st { font-size: 0; gap: 0; }
   .row .chk, .row .ic, .row .job, .nm .m, .card-h small, .card-h .when, .toolbar .cnt { display: none; }
   .acts span:not(:first-child) { display: none; }
   .panel, .stage { padding: 22px; }
@@ -355,6 +375,23 @@ footer p { flex-basis: 100%; margin: 6px 0 0; }
 </style>
 </head>
 <body>
+<!-- The app's own icon paths (src/components/ui.tsx), shared by the mockups below. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 16 16"><path fill="currentColor" d="M5 3.5v9l7.5-4.5z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 16 16"><path fill="currentColor" d="M4 4h8v8H4z"/></symbol>
+  <symbol id="i-prompt" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 4.5 6.5 8 3 11.5M8.5 11.5H13"/></symbol>
+  <symbol id="i-more" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 8h.01M8 8h.01M12 8h.01"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M12.5 6A4.75 4.75 0 1 0 13 9.5M12.5 2.5V6H9"/></symbol>
+  <symbol id="i-search" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10zM10.5 10.5 14 14"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M2 4.5h4l1.5 1.5H14v6.5H2z"/></symbol>
+  <symbol id="i-close" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M4 4l8 8M12 4l-8 8"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 4l4 4-4 4"/></symbol>
+  <symbol id="i-list" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h10M3 8h10M3 11.5h10"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M1.5 8h3l2-5 3 10 2-5h3"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></symbol>
+  <symbol id="i-box" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M2.5 5 8 2.5 13.5 5v6L8 13.5 2.5 11zM2.5 5 8 7.5 13.5 5M8 7.5v6"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 16 16"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3.3 3h9.4c.7 0 1.3.6 1.3 1.3v5.4c0 .7-.6 1.3-1.3 1.3H3.3C2.6 11 2 10.4 2 9.7V4.3C2 3.6 2.6 3 3.3 3zM5.5 13.5h5M8 11v2.5"/></symbol>
+</svg>
 
 <header class="top">
   <div class="wrap">
@@ -421,47 +458,48 @@ footer p { flex-basis: 100%; margin: 6px 0 0; }
           <aside class="side">
             <div class="lights"><i></i><i></i><i></i></div>
             <div class="brand">Boxdeck</div>
-            <div class="item on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Machines</div>
-            <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 9 8-4.5M12 12v9M12 12 4 7.5"/></svg>Boxes</div>
-            <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>Activity<span class="badge-n">1</span></div>
-            <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>Settings</div>
+            <div class="item on"><svg><use href="#i-monitor"/></svg>Machines</div>
+            <div class="item"><svg><use href="#i-box"/></svg>Boxes</div>
+            <div class="item"><svg><use href="#i-activity"/></svg>Activity<span class="badge-n">1</span></div>
+            <div class="item"><svg><use href="#i-settings"/></svg>Settings</div>
             <div class="ver">Vagrant 2.4.9</div>
           </aside>
           <div class="main">
             <div class="toolbar">
               <span class="ttl">Machines</span>
               <span class="cnt">2 running · 5 total</span>
-              <span class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>Search</span>
-              <span class="mini sel">All states<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span>
-              <span class="mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6.5h6l2 2h10V19H3z"/></svg>Add project…</span>
-              <span class="mini"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9a7.5 7.5 0 1 0 .8 5.5M19 4v5h-5"/></svg>Refresh</span>
+              <span class="search"><svg><use href="#i-search"/></svg>Search</span>
+              <span class="mini sel">All states<svg class="dn"><use href="#i-chevron"/></svg></span>
+              <span class="mini"><svg><use href="#i-folder"/></svg>Add project…</span>
+              <span class="mini"><svg><use href="#i-refresh"/></svg>Refresh</span>
             </div>
             <div class="list">
             <div class="grph">Work</div>
             <div class="card">
-              <div class="card-h"><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span><i style="background:#8da2f5"></i>shop-api <small>~/code/shop-api</small><span class="when">checked just now</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9a7.5 7.5 0 1 0 .8 5.5M19 4v5h-5"/></svg></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></span></div>
-              <div class="row"><span class="chk"></span><span class="st"><span class="dot run"></span>running</span><span class="nm">web<span class="m">vmware_desktop</span></span><span class="acts"><span><svg viewBox="0 0 24 24" fill="var(--danger)"><rect x="6.5" y="6.5" width="11" height="11" rx="1"/></svg>Halt</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 10 3 2-3 2M12.5 15h4"/></svg>SSH</span></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></span></div>
-              <div class="row"><span class="chk"></span><span class="st"><span class="dot run"></span>running</span><span class="nm">db<span class="m">vmware_desktop</span></span><span class="acts"><span><svg viewBox="0 0 24 24" fill="var(--danger)"><rect x="6.5" y="6.5" width="11" height="11" rx="1"/></svg>Halt</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 10 3 2-3 2M12.5 15h4"/></svg>SSH</span></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></span></div>
+              <div class="card-h"><span class="chev"><svg><use href="#i-chevron"/></svg></span><i style="background:#3e63dd"></i>Storefront <small>~/projects/storefront</small><small>(pinned)</small><span class="when">checked just now</span><span class="ic"><svg><use href="#i-refresh"/></svg></span><span class="ic"><svg><use href="#i-more"/></svg></span></div>
+              <div class="row"><span class="chk"></span><span class="st"><span class="dot run"></span>running</span><span class="nm">app<span class="m">vmware_desktop</span></span><span class="acts"><span><svg class="red"><use href="#i-stop"/></svg>Halt</span><span><svg><use href="#i-prompt"/></svg>SSH</span></span><span class="ic"><svg><use href="#i-more"/></svg></span></div>
+              <div class="row"><span class="chk"></span><span class="st"><span class="dot run"></span>running</span><span class="nm">postgres<span class="m">vmware_desktop</span></span><span class="acts"><span><svg class="red"><use href="#i-stop"/></svg>Halt</span><span><svg><use href="#i-prompt"/></svg>SSH</span></span><span class="ic"><svg><use href="#i-more"/></svg></span></div>
             </div>
             <div class="grph">Other projects</div>
             <div class="card">
-              <div class="card-h"><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span><i style="background:#4cc884"></i>homestead <small>~/Homestead</small><span class="when">checked 1 min ago</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9a7.5 7.5 0 1 0 .8 5.5M19 4v5h-5"/></svg></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></span></div>
-              <div class="row sel"><span class="chk on"></span><span class="st"><span class="dot sus"></span>saved</span><span class="nm">homestead<span class="m">vmware_desktop</span><span class="job"><i></i>resume</span></span><span class="acts"><span>Cancel</span></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></span></div>
+              <div class="card-h"><span class="chev"><svg><use href="#i-chevron"/></svg></span>~/labs/ansible<span class="when">checked 1 min ago</span><span class="ic"><svg><use href="#i-refresh"/></svg></span><span class="ic"><svg><use href="#i-more"/></svg></span></div>
+              <div class="row"><span class="chk"></span><span class="st"><span class="dot sus"></span>saved</span><span class="nm">control<span class="m">vmware_desktop</span><span class="job"><i></i>resume</span></span><span class="acts"><span class="p off"><svg><use href="#i-play"/></svg>Resume</span><span class="off"><svg><use href="#i-prompt"/></svg>SSH</span></span><span class="ic"><svg><use href="#i-more"/></svg></span></div>
             </div>
             <div class="card">
-              <div class="card-h"><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></span><i style="background:#f0a937"></i>k8s-lab <small>~/labs/k8s</small><span class="when">checked 2 min ago</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 9a7.5 7.5 0 1 0 .8 5.5M19 4v5h-5"/></svg></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></span></div>
-              <div class="row"><span class="chk"></span><span class="st"><span class="dot "></span>not created</span><span class="nm">control<span class="m">docker</span></span><span class="acts"><span class="p"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10-6.5z"/></svg>Up</span><span class="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 10 3 2-3 2M12.5 15h4"/></svg>SSH</span></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></span></div>
-              <div class="row"><span class="chk"></span><span class="st"><span class="dot "></span>poweroff</span><span class="nm">worker-1<span class="m">docker</span></span><span class="acts"><span class="p"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l10-6.5z"/></svg>Up</span><span class="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 10 3 2-3 2M12.5 15h4"/></svg>SSH</span></span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 12h.01M12 12h.01M18 12h.01"/></svg></span></div>
+              <div class="card-h"><span class="chev"><svg><use href="#i-chevron"/></svg></span><i style="background:#30a46c"></i>Kafka lab <small>~/labs/kafka</small><span class="when">checked 2 min ago</span><span class="ic"><svg><use href="#i-refresh"/></svg></span><span class="ic"><svg><use href="#i-more"/></svg></span></div>
+              <div class="row"><span class="chk"></span><span class="st"><span class="dot"></span>not created</span><span class="nm">broker-1<span class="m">docker</span></span><span class="acts"><span class="p"><svg><use href="#i-play"/></svg>Up</span><span class="off"><svg><use href="#i-prompt"/></svg>SSH</span></span><span class="ic"><svg><use href="#i-more"/></svg></span></div>
+              <div class="row"><span class="chk"></span><span class="st"><span class="dot"></span>stopped</span><span class="nm">broker-2<span class="m">docker</span></span><span class="acts"><span class="p"><svg><use href="#i-play"/></svg>Up</span><span class="off"><svg><use href="#i-prompt"/></svg>SSH</span></span><span class="ic"><svg><use href="#i-more"/></svg></span></div>
             </div>
             </div>
             <div class="dock">
-              <div class="dt"><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>resume homestead</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m7 10 3 2-3 2M12.5 15h4"/></svg>ssh web</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>provision db</span></div>
-              <div class="dh"><code>resume homestead --no-tty</code><span class="mini">Cancel</span><span class="prog"><i></i></span></div>
-<pre><span class="b">==&gt; homestead:</span> Resuming suspended VM...
-<span class="b">==&gt; homestead:</span> Waiting for the VM to receive an address...
-<span class="b">==&gt; homestead:</span> Forwarding ports...
-<span class="d">    homestead: </span><span class="y">80 (guest) =&gt; 8000 (host)</span><span class="d"> (adapter 1)</span>
-<span class="g">==&gt; homestead:</span> Machine booted and ready!</pre>
+              <div class="dt"><span class="on"><svg><use href="#i-list"/></svg>resume control<svg class="x"><use href="#i-close"/></svg></span><span><svg><use href="#i-prompt"/></svg>ssh app<svg class="x"><use href="#i-close"/></svg></span><span><svg><use href="#i-list"/></svg>provision postgres<svg class="x"><use href="#i-close"/></svg></span><b class="col"><svg class="dn"><use href="#i-chevron"/></svg></b></div>
+              <div class="dh"><code>resume control --no-tty</code><span class="mini">Cancel</span><span class="prog"><i></i></span></div>
+<pre><span class="b">==&gt; control:</span> Resuming suspended VM...
+<span class="b">==&gt; control:</span> Waiting for the VM to receive an address...
+<span class="b">==&gt; control:</span> Forwarding ports...
+<span class="d">    control: </span><span class="y">22 (guest) =&gt; 2222 (host)</span><span class="d"> (adapter 1)</span>
+<span class="b">==&gt; control:</span> Waiting for machine to boot. This may take a few minutes...
+<span class="d">    control: SSH address: 127.0.0.1:2222</span> <span class="cursor"></span></pre>
             </div>
           </div>
         </div>
@@ -480,40 +518,41 @@ footer p { flex-basis: 100%; margin: 6px 0 0; }
     <div class="gallery">
       <article class="tile rv">
         <div class="art tone-ink grainy"><div class="ui bleed-b">
-          <div class="t">shop-api</div>
-          <div class="r2"><span class="dot run"></span>web<span class="m">running</span></div>
-          <div class="r2"><span class="dot run"></span>db<span class="m">running</span></div>
-          <div class="r2"><span class="dot sus"></span>cache<span class="m">saved</span></div>
-          <div class="r2"><span class="dot"></span>worker<span class="m">not created</span></div>
-          <div class="r2"><span class="dot"></span>queue<span class="m">poweroff</span></div>
+          <div class="t">Storefront</div>
+          <div class="r2"><span class="dot run"></span>app<span class="m">running</span></div>
+          <div class="r2"><span class="dot run"></span>postgres<span class="m">running</span></div>
+          <div class="r2"><span class="dot sus"></span>redis<span class="m">saved</span></div>
+          <div class="r2"><span class="dot"></span>search<span class="m">not created</span></div>
+          <div class="r2"><span class="dot"></span>mailpit<span class="m">poweroff</span></div>
         </div></div>
         <div class="meta"><h3>Every machine, found</h3><span class="badge">Core</span><span class="cat">Machines</span></div>
         <p>Grouped by project with live state, search and filters.</p>
       </article>
       <article class="tile rv">
         <div class="art tone-indigo grainy"><div class="btnrow">
-          <span class="hot">Up</span><span>Halt</span><span>Suspend</span><span>Resume</span><span>Reload</span><span>Provision</span><span class="del">Destroy</span>
+          <span class="hot">Up</span><span>Halt</span><span>Suspend</span><span>Resume</span><span>Reload</span><span>Provision</span><span>SSH</span><span>Open folder</span><span class="del">Destroy…</span>
         </div></div>
         <div class="meta"><h3>One-click actions</h3><span class="badge">Core</span><span class="cat">Machines</span></div>
         <p>For one machine, a selection, or a whole project.</p>
       </article>
       <article class="tile rv">
         <div class="art tone-steel grainy"><div class="ui bleed-r">
-<pre><span class="g">vagrant@web</span>:<span class="b">~</span>$ uptime
+<pre><span class="g">vagrant@app</span>:<span class="b">~</span>$ uptime
  10:42  up 2:13,  1 user
-<span class="g">vagrant@web</span>:<span class="b">~</span>$ systemctl is-active nginx
+<span class="g">vagrant@app</span>:<span class="b">~</span>$ systemctl is-active nginx
 active
-<span class="g">vagrant@web</span>:<span class="b">~</span>$ <span class="cursor"></span></pre>
+<span class="g">vagrant@app</span>:<span class="b">~</span>$ <span class="cursor"></span></pre>
         </div></div>
         <div class="meta"><h3>SSH in a tab</h3><span class="badge">Core</span><span class="cat">Terminal</span></div>
         <p>A real terminal inside the app, already in the right folder.</p>
       </article>
       <article class="tile rv">
         <div class="art tone-slate grainy"><div class="ui bleed-b">
-          <div class="t">provision db · running</div>
-<pre><span class="b">==&gt; db:</span> Running provisioner: shell...
-<span class="d">    db: Setting up postgresql-16</span>
-<span class="d">    db: Creating cluster 16/main</span></pre>
+          <div class="t">provision postgres --no-tty</div>
+<pre><span class="b">==&gt; postgres:</span> Running provisioner: shell...
+<span class="d">    postgres: Running: inline script</span>
+<span class="d">    postgres: Setting up postgresql-16</span>
+<span class="d">    postgres: Creating cluster 16/main</span></pre>
           <div class="prog"><i></i></div>
         </div></div>
         <div class="meta"><h3>Live output, safe cancel</h3><span class="badge">Core</span><span class="cat">Jobs</span></div>
@@ -521,11 +560,20 @@ active
       </article>
       <article class="tile rv">
         <div class="art tone-graphite grainy"><div class="ui bleed-r">
-          <div class="r2" style="font-weight:600"><img src="icon.png" alt="" width="16" height="16">Boxdeck<span class="m">2 running</span></div>
-          <div class="r2"><span class="dot run"></span>shop-api / web<span class="m">Halt</span></div>
-          <div class="r2"><span class="dot run"></span>shop-api / db<span class="m">Halt</span></div>
-          <div class="r2"><span class="dot sus"></span>homestead<span class="m">Resume</span></div>
-          <div class="r2">Halt all</div>
+          <div class="menu">
+            <div class="mi off">2 running · 3 stopped</div>
+            <hr>
+            <div class="mi">● app — storefront<span>›</span></div>
+            <div class="mi">● postgres — storefront<span>›</span></div>
+            <div class="mi">◐ control — ansible  (resume…)<span>›</span></div>
+            <div class="mi">○ broker-1 — kafka<span>›</span></div>
+            <hr>
+            <div class="mi">Halt All Running</div>
+            <div class="mi">Refresh Status</div>
+            <div class="mi">Open Boxdeck</div>
+            <hr>
+            <div class="mi">✓ Launch at Login</div>
+          </div>
         </div></div>
         <div class="meta"><h3>Lives in your menu bar</h3><span class="badge">Core</span><span class="cat">Tray</span></div>
         <p>Per-machine actions, launch at login, a notification when jobs finish.</p>
@@ -542,10 +590,11 @@ active
     <div class="gallery">
       <article class="tile rv">
         <div class="art tone-ink grainy"><div class="ui bleed-b">
-          <div class="bars">
-            <div><span>bento/ubuntu-24.04<i style="width:92%"></i></span><span>1.4 GB</span></div>
-            <div><span>laravel/homestead<i style="width:76%"></i></span><span>1.1 GB</span></div>
-            <div><span>generic/debian12<i style="width:40%"></i></span><span>612 MB</span></div>
+          <div class="tbl">
+            <span class="h">Box</span><span class="h">Size</span><span class="h">Used by</span>
+            <span>bento/debian-12<small class="w">202510.07.0 available</small></span><span>1.2 GB</span><span>app, postgres</span>
+            <span>bento/rockylinux-9</span><span>1.6 GB</span><span>control</span>
+            <span>generic/alpine319</span><span>380 MB</span><span class="d">unused</span>
           </div>
         </div></div>
         <div class="meta"><h3>Boxes, under control</h3><span class="badge">Core</span><span class="cat">Boxes</span></div>
@@ -553,19 +602,20 @@ active
       </article>
       <article class="tile rv">
         <div class="art tone-indigo grainy"><div class="ui bleed-r">
+          <div class="r2 eh"><b>Vagrantfile</b><span class="mini">Validate</span><span class="mini hot">Save</span></div>
+          <div class="okbar">Vagrant says the file is valid.</div>
 <pre><span class="p">Vagrant</span>.configure(<span class="s">"2"</span>) <span class="p">do</span> |config|
-  config.vm.box = <span class="s">"bento/ubuntu-24.04"</span>
+  config.vm.box = <span class="s">"bento/debian-12"</span>
   config.vm.network <span class="b">:forwarded_port</span>,
-    guest: <span class="y">80</span>, host: <span class="y">8000</span>
+    guest: <span class="y">80</span>, host: <span class="y">8080</span>
 <span class="p">end</span></pre>
-          <div class="r2" style="margin-top:6px"><span class="dot run"></span>vagrant validate<span class="m">ok</span></div>
         </div></div>
         <div class="meta"><h3>Vagrantfile editor</h3><span class="badge">Core</span><span class="cat">Editor</span></div>
         <p>Ruby highlighting, a backup on every save, conflict detection.</p>
       </article>
       <article class="tile rv">
         <div class="art tone-slate grainy"><div class="tagcloud">
-          <span><i style="background:#4d6cdf"></i>Work</span><span><i style="background:#1f8a4c"></i>Side projects</span><span><i style="background:#b26a00"></i>Experiments</span><span>Pinned</span><span class="mono">VAGRANT_DEFAULT_PROVIDER</span><span class="mono">--provision</span>
+          <span><i style="background:#3e63dd"></i>Work</span><span><i style="background:#30a46c"></i>Side projects</span><span><i style="background:#f76b15"></i>Experiments</span><span>Pinned</span><span class="mono">VAGRANT_DEFAULT_PROVIDER</span><span class="mono">--provision</span>
         </div></div>
         <div class="meta"><h3>Projects your way</h3><span class="badge">Core</span><span class="cat">Projects</span></div>
         <p>Names, groups, colors, pinning, per-project env vars and up defaults.</p>
@@ -596,15 +646,19 @@ active
       </div>
       <div class="stage grainy rv" aria-hidden="true">
         <div class="chat">
-          <span class="d">agent ›</span> worker-1 is wedged. I'll destroy it and bring it back up.<br>
-          <span class="d">tool  ›</span> <span class="y">machine_destroy</span>(project: <span class="s">"k8s-lab"</span>, machine: <span class="s">"worker-1"</span>)<br>
+          <span class="d">agent ›</span> broker-2 is wedged. I'll destroy it and bring it back up.<br>
+          <span class="d">tool  ›</span> <span class="y">machine_destroy</span>(project: <span class="s">"~/labs/kafka"</span>, <span style="white-space:nowrap">machine: <span class="s">"broker-2"</span>)</span><br>
           <span class="d">      ›</span> waiting for approval…
         </div>
         <div class="dlg">
-          <div class="ttl"><i></i>Approve destructive action?</div>
-          <p>An MCP client wants to destroy a machine. This deletes the VM and its disks.</p>
-          <dl><dt>Client</dt><dd>Claude Desktop</dd><dt>Action</dt><dd>destroy</dd><dt>Machine</dt><dd>k8s-lab / worker-1</dd></dl>
-          <div class="bt"><span>Deny</span><span class="x">Destroy</span></div>
+          <div class="ttl"><i></i>An agent wants to make a change</div>
+          <dl><dt>Agent</dt><dd>Claude Code</dd><dt>Action</dt><dd class="mono">machine_destroy</dd><dt>Project</dt><dd>~/labs/kafka</dd><dt>Machine</dt><dd>broker-2</dd></dl>
+          <p>Exact arguments:</p>
+<pre>{
+  "project": "/Users/you/labs/kafka",
+  "machine": "broker-2"
+}</pre>
+          <div class="bt"><small>Denied automatically in 54 s</small><span>Deny</span><span class="x">Allow</span></div>
         </div>
       </div>
     </div>
