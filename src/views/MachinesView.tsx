@@ -590,7 +590,7 @@ const MachineRow = memo(function MachineRow({
           </Button>
         )}
         <Button size="sm" onClick={openSsh} disabled={!running}>
-          <Icon name="terminal" className="size-3" /> SSH
+          <Icon name="prompt" className="size-3" /> SSH
         </Button>
         <Menu
           trigger={<IconButton icon="more" label={`More actions for ${m.name}`} />}

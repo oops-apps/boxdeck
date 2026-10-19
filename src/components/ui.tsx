@@ -12,6 +12,7 @@ const ICONS = {
   stop: "M4 4h8v8H4z",
   pause: "M4.5 3.5h2.5v9H4.5zM9 3.5h2.5v9H9z",
   terminal: "M2.5 3.5h11v9h-11zM4.5 6l2 2-2 2M8 10.5h3",
+  prompt: "M3 4.5 6.5 8 3 11.5M8.5 11.5H13",
   more: "M4 8h.01M8 8h.01M12 8h.01",
   refresh: "M12.5 6A4.75 4.75 0 1 0 13 9.5M12.5 2.5V6H9",
   search: "M7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10zM10.5 10.5 14 14",
@@ -242,7 +243,7 @@ export function StateBadge({
   const { dot } = stateStyle(state);
   return (
     <span
-      className="inline-flex items-center gap-2 font-mono text-xs text-muted"
+      className="flex max-w-full min-w-0 items-center gap-2 font-mono text-xs whitespace-nowrap text-muted"
       title={stale ? "Cached state from Vagrant's index; may be out of date" : undefined}
     >
       <span
@@ -250,8 +251,9 @@ export function StateBadge({
         aria-hidden="true"
         className={cn("size-2 shrink-0 rounded-full", dot, changes > 0 && "anim-glyph")}
       />
-      {label}
-      {stale && <span className="font-sans text-muted">(cached)</span>}
+      <span className="truncate">{label}</span>
+      {/* Hover shows it; screen readers still hear it. */}
+      {stale && <span className="sr-only">(cached)</span>}
     </span>
   );
 }
