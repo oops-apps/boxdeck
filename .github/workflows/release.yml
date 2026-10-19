@@ -1,16 +1,107 @@
 name: Release
 
-# Builds signed-for-update bundles for every platform and attaches them to a draft release.
+# Run from the Actions tab with a version: bumps it everywhere, dates the changelog, tags, builds
+# every platform into one release and, if asked, publishes it. Pushing a v* tag by hand still
+# works and builds a draft for that tag.
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, for example 0.2.0"
+        required: true
+        type: string
+      publish:
+        description: "Publish the release once every build succeeds (otherwise it stays a draft)"
+        type: boolean
+        default: false
   push:
     tags: ["v*"]
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
-  release:
-    name: Release (${{ matrix.target }})
+  prepare:
+    name: Prepare
+    runs-on: ubuntu-24.04
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      release_id: ${{ steps.release.outputs.id }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - id: version
+        name: Work out the version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch ]]; then
+            [[ "$GITHUB_REF" == refs/heads/main ]] || { echo "::error::Run releases from main"; exit 1; }
+            v="${INPUT_VERSION#v}"
+            if git ls-remote --exit-code --tags origin "refs/tags/v$v" >/dev/null; then
+              echo "::error::Tag v$v already exists"; exit 1
+            fi
+          else
+            v="${GITHUB_REF_NAME#v}"
+          fi
+          [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "::error::'$v' is not a semver version"; exit 1; }
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+
+      - name: Bump versions, date the changelog, tag
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          V: ${{ steps.version.outputs.version }}
+        run: |
+          sed -i -E "s/^version = \"[^\"]+\"/version = \"$V\"/" Cargo.toml
+          sed -i -E "0,/\"version\": \"[^\"]+\"/s//\"version\": \"$V\"/" src-tauri/tauri.conf.json
+          npm version "$V" --no-git-tag-version --allow-same-version
+          cargo update --workspace
+          if ! grep -q "^## \[$V\]" CHANGELOG.md; then
+            sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [$V] - $(date -u +%F)/" CHANGELOG.md
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(release): v$V" || echo "Versions already at $V"
+          git tag "v$V"
+          git push origin HEAD:main "v$V"
+
+      - name: Check the tag matches the code
+        if: github.event_name == 'push'
+        env:
+          V: ${{ steps.version.outputs.version }}
+        run: |
+          grep -q "^version = \"$V\"" Cargo.toml || { echo "::error::Cargo.toml isn't at $V"; exit 1; }
+          grep -q "\"version\": \"$V\"" src-tauri/tauri.conf.json || { echo "::error::tauri.conf.json isn't at $V"; exit 1; }
+
+      # One draft release up front, so the four builds upload into it instead of racing to create it.
+      - id: release
+        name: Create the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          V: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          awk -v h="## [$V]" 'index($0, h) == 1 {f = 1; next} f && /^## \[/ {exit} f' CHANGELOG.md > notes.md
+          [[ -s notes.md ]] || echo "See [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)." > notes.md
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -1)
+          if [[ -z "$id" ]]; then
+            prerelease=false; [[ "$V" == *-* ]] && prerelease=true
+            id=$(gh api "repos/$GITHUB_REPOSITORY/releases" -f tag_name="$TAG" -f name="Boxdeck $TAG" \
+              -F body=@notes.md -F draft=true -F prerelease="$prerelease" --jq .id)
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build (${{ matrix.target }})
+    needs: prepare
     strategy:
       fail-fast: false
       matrix:
@@ -19,28 +110,35 @@ jobs:
             target: aarch64-apple-darwin
           - platform: macos-latest
             target: x86_64-apple-darwin
+          # The oldest supported Ubuntu, so the .deb and AppImage run on older glibc too.
           - platform: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
           - platform: windows-latest
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ needs.prepare.outputs.tag }}
 
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file \
-            libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+        uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+        with:
+          packages: libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
+          version: tauri-v2
 
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - uses: Swatinem/rust-cache@v2
+      # Release builds per target; runs started from the Actions tab save on main, so the next
+      # release restores them.
+      - uses: Swatinem/rust-cache@v2.9.2
+        with:
+          key: release-${{ matrix.target }}
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -48,28 +146,39 @@ jobs:
       - run: npm ci
 
       # beforeBuildCommand builds the boxdeck-mcp sidecar for the same target.
-      - uses: tauri-apps/tauri-action@v1
+      - uses: tauri-apps/tauri-action@v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: Boxdeck ${{ github.ref_name }}
-          releaseBody: See CHANGELOG.md for what changed.
-          releaseDraft: true
+          releaseId: ${{ needs.prepare.outputs.release_id }}
           args: --target ${{ matrix.target }}
 
       - name: Attach standalone boxdeck-mcp
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          TARGET: ${{ matrix.target }}
         run: |
-          ext=""; [[ "${{ matrix.target }}" == *windows* ]] && ext=".exe"
-          name="boxdeck-mcp-${{ github.ref_name }}-${{ matrix.target }}"
+          ext=""; [[ "$TARGET" == *windows* ]] && ext=".exe"
+          name="boxdeck-mcp-$TAG-$TARGET"
           mkdir -p "$name"
-          cp "target/${{ matrix.target }}/release/boxdeck-mcp$ext" "$name/"
+          cp "target/$TARGET/release/boxdeck-mcp$ext" "$name/"
           cp LICENSE "$name/"
           if [[ "$ext" == ".exe" ]]; then 7z a "$name.zip" "$name" >/dev/null; f="$name.zip";
           else tar -czf "$name.tar.gz" "$name"; f="$name.tar.gz"; fi
-          gh release upload "${{ github.ref_name }}" "$f" --clobber
+          gh release upload "$TAG" "$f" --clobber
+
+  publish:
+    name: Publish
+    needs: [prepare, build]
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ID: ${{ needs.prepare.outputs.release_id }}
+        run: gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false -f make_latest=true --silent
