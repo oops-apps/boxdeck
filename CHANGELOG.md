@@ -4,6 +4,12 @@ All notable changes to Boxdeck are recorded here. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+## [0.1.0-beta.2] - 2026-10-19
+
+### Changed
+
+- macOS builds are ad-hoc signed, so macOS asks you to confirm the first launch instead of reporting the app as damaged.
+
 ## [0.1.0-beta.1] - 2026-10-19
 
 ### Added
