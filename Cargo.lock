@@ -360,7 +360,7 @@ dependencies = [
 
 [[package]]
 name = "boxdeck"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.4"
 dependencies = [
  "axum",
  "boxdeck-core",
@@ -384,7 +384,7 @@ dependencies = [
 
 [[package]]
 name = "boxdeck-core"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.4"
 dependencies = [
  "directories",
  "fix-path-env",
@@ -408,7 +408,7 @@ dependencies = [
 
 [[package]]
 name = "boxdeck-mcp"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.4"
 dependencies = [
  "boxdeck-core",
  "insta",
@@ -1161,7 +1161,7 @@ dependencies = [
 
 [[package]]
 name = "fake-vagrant"
-version = "0.1.0-beta.3"
+version = "0.1.0-beta.4"
 dependencies = [
  "tokio",
 ]

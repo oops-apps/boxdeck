@@ -4,6 +4,8 @@ All notable changes to Boxdeck are recorded here. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+## [0.1.0-beta.4] - 2026-10-19
+
 ### Changed
 
 - Betas are published as regular releases, so the in-app updater finds them. Updating from 0.1.0-beta.3 starts with this release.
