@@ -35,12 +35,17 @@ pub fn watch_file(file: &Path, on_change: impl Fn() + Send + 'static) -> Result<
         None => return Err(Error::invalid("watched file", "no existing parent folder")),
     };
     let target = file.to_owned();
+    let watched = root.clone();
     let mut debouncer = new_debouncer(DEBOUNCE, None, move |result: DebounceEventResult| {
         let Ok(events) = result else { return };
+        // inotify only watches a new folder after its create event, so `mkdir -p` plus a write
+        // can finish first and the file's own event never arrives. Count the folders on the way.
         let relevant = events.iter().any(|e| {
-            e.paths
-                .iter()
-                .any(|p| p == &target || p.file_name() == Some(name.as_os_str()))
+            e.paths.iter().any(|p| {
+                p == &target
+                    || p.file_name() == Some(name.as_os_str())
+                    || (p != &watched && target.starts_with(p))
+            })
         });
         if relevant {
             on_change();
