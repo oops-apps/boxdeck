@@ -5,6 +5,7 @@ mod mcp_http;
 mod settings_cmds;
 mod state;
 mod tray;
+mod update_cmds;
 
 use boxdeck_core::jobs::{JobEvent, JobState};
 use state::AppState;
@@ -24,12 +25,14 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(
             tauri_plugin_autostart::Builder::new()
                 .args([AUTOSTART_ARG])
                 .build(),
         )
         .manage(AppState::new())
+        .manage(update_cmds::PendingUpdate::default())
         .invoke_handler(tauri::generate_handler![
             commands::app_info,
             commands::list_machines,
@@ -70,6 +73,9 @@ pub fn run() {
             mcp_cmds::list_audit,
             approvals::get_approval,
             approvals::answer_approval,
+            update_cmds::pending_app_update,
+            update_cmds::check_app_update,
+            update_cmds::install_app_update,
         ])
         .on_window_event(|window, event| {
             // Closing an approval window without answering counts as "no".
@@ -102,6 +108,10 @@ pub fn run() {
             commands::watch_index(&handle);
             commands::watch_audit(&handle);
             notify_finished_jobs(&handle);
+            // Dev builds would only ever find the published release.
+            if settings.app.check_updates_on_launch && !cfg!(debug_assertions) {
+                tauri::async_runtime::spawn(update_cmds::check_on_launch(handle.clone()));
+            }
             tauri::async_runtime::spawn(commands::startup(handle));
             Ok(())
         })
@@ -177,6 +187,21 @@ mod tests {
     #[test]
     fn csp_is_set() {
         assert!(config()["app"]["security"]["csp"].is_string());
+    }
+
+    #[test]
+    fn updater_reads_signed_releases_from_github() {
+        let updater = &config()["plugins"]["updater"];
+        assert!(!updater["pubkey"].as_str().unwrap_or_default().is_empty());
+        assert_eq!(
+            updater["endpoints"][0],
+            "https://github.com/oops-apps/boxdeck/releases/latest/download/latest.json"
+        );
+        // Signed bundles only in the release build, which has the private key.
+        assert_ne!(config()["bundle"]["createUpdaterArtifacts"], true);
+        let release: serde_json::Value =
+            serde_json::from_str(include_str!("../tauri.updater.conf.json")).unwrap();
+        assert_eq!(release["bundle"]["createUpdaterArtifacts"], true);
     }
 
     #[test]

@@ -38,6 +38,7 @@ beforeEach(() => {
     selected: new Set(),
     settingsTab: "general",
     settingsProject: null,
+    updateCheck: "idle",
   });
 });
 
@@ -295,5 +296,57 @@ describe("Popular boxes", () => {
     );
     fireEvent.click(homestead);
     expect(within(dialog).getByLabelText("Source")).toHaveValue("laravel/homestead");
+  });
+});
+
+describe("App updates", () => {
+  it("checks, shows the release notes and installs with progress", async () => {
+    useUi.setState({ view: "settings", settingsTab: "about" });
+    renderApp();
+    fireEvent.click(await screen.findByRole("button", { name: "Check for updates" }));
+    expect(await screen.findByText("Boxdeck 0.2.0 is available")).toBeInTheDocument();
+    expect(screen.getByText(/Snapshots: take, restore/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Install and restart" }));
+    expect(await screen.findByRole("progressbar", { name: "Update download" })).toBeInTheDocument();
+    expect(await screen.findByText("Restarting Boxdeck…")).toBeInTheDocument();
+  });
+
+  it("says when Boxdeck is up to date", async () => {
+    mock.checkAppUpdate = async () => null;
+    useUi.setState({ view: "settings", settingsTab: "about" });
+    renderApp();
+    fireEvent.click(await screen.findByRole("button", { name: "Check for updates" }));
+    expect(await screen.findByText("You're up to date.")).toBeInTheDocument();
+  });
+
+  it("announces a release found at launch and waits for running jobs", async () => {
+    mock.pendingAppUpdate = async () => ({
+      version: "0.2.0",
+      current_version: "0.1.0",
+      notes: null,
+      date: null,
+    });
+    renderApp();
+    fireEvent.click(await screen.findByRole("button", { name: "View update" }));
+    await screen.findByText("Boxdeck 0.2.0 is available");
+    expect(screen.queryByRole("button", { name: "View update" })).not.toBeInTheDocument();
+    act(() =>
+      useUi.getState().upsertJob({
+        id: 99,
+        label: "up web",
+        origin: { kind: "ui" },
+        scope: { scope: "machine", project: "/Users/dev/work/api", name: "web" },
+        argv: ["up", "web"],
+        cwd: null,
+        state: "running",
+        exit_code: null,
+        error: null,
+        queued_at: Date.now(),
+        started_at: Date.now(),
+        finished_at: null,
+      }),
+    );
+    expect(screen.getByRole("button", { name: "Install and restart" })).toBeDisabled();
+    expect(screen.getByText("Wait for running Vagrant jobs to finish first.")).toBeInTheDocument();
   });
 });

@@ -15,4 +15,8 @@ menu_bar_only: boolean, launch_at_login: boolean,
 /**
  * System notification when a job finishes while the window isn't focused.
  */
-notify_on_finish: boolean, };
+notify_on_finish: boolean, 
+/**
+ * Look for a new Boxdeck release once at startup.
+ */
+check_updates_on_launch: boolean, };

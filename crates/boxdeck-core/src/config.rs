@@ -172,6 +172,8 @@ pub struct AppSettings {
     pub launch_at_login: bool,
     /// System notification when a job finishes while the window isn't focused.
     pub notify_on_finish: bool,
+    /// Look for a new Boxdeck release once at startup.
+    pub check_updates_on_launch: bool,
 }
 
 impl Default for AppSettings {
@@ -182,6 +184,7 @@ impl Default for AppSettings {
             menu_bar_only: false,
             launch_at_login: false,
             notify_on_finish: true,
+            check_updates_on_launch: true,
         }
     }
 }
@@ -488,6 +491,12 @@ mod tests {
                 .iter()
                 .all(|(k, _)| k != "PATH")
         );
+    }
+
+    #[test]
+    fn update_check_defaults_on_for_older_settings_files() {
+        let app: AppSettings = serde_json::from_str(r#"{"keep_in_tray": false}"#).unwrap();
+        assert!(app.check_updates_on_launch);
     }
 
     #[test]

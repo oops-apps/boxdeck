@@ -34,6 +34,8 @@ allow = [
   "CC0-1.0",
   # File-level copyleft from Tauri's HTML parsing deps (cssparser, selectors); fine unmodified in an MIT app.
   "MPL-2.0",
+  # Mozilla's root-certificate data (webpki-root-certs), via the updater's TLS; permissive, no copyleft.
+  "CDLA-Permissive-2.0",
 ]
 
 [bans]

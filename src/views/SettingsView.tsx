@@ -1,5 +1,13 @@
 import { useState, type ReactNode } from "react";
-import { useAppInfo, useMachines, useSaveSettings, useSettings } from "../hooks";
+import {
+  isActive,
+  useAppInfo,
+  useAppUpdate,
+  useCheckForUpdate,
+  useMachines,
+  useSaveSettings,
+  useSettings,
+} from "../hooks";
 import { api } from "../ipc/api";
 import type { AgentAccess } from "../ipc/generated/AgentAccess";
 import type { ProjectSettings } from "../ipc/generated/ProjectSettings";
@@ -267,6 +275,7 @@ export function SettingsView() {
           {tab === "mcp" && <McpSection draft={draft} set={set} />}
           {tab === "about" && (
             <>
+              <UpdatesSection draft={draft} set={set} />
               <Section title="Backup">
                 <Row label="Settings file" hint="Move your setup to another computer">
                   <div className="flex gap-2">
@@ -694,6 +703,164 @@ function Diagnostics() {
           {info.vagrant_error}
         </p>
       )}
+    </Section>
+  );
+}
+
+const mb = (bytes: number) => (bytes / 1_000_000).toFixed(1);
+
+/** Changelog Markdown, reduced to its headings and bullets; anything else shows as plain text. */
+function ReleaseNotes({ text }: { text: string }) {
+  const lines = text.split("\n").filter((l) => l.trim() !== "");
+  return (
+    <div className="mb-2 flex max-h-48 flex-col gap-1 overflow-auto rounded-md border border-border bg-sunken p-2 text-xs selectable">
+      {lines.map((line, i) => {
+        const heading = /^#+\s+(.*)/.exec(line);
+        if (heading)
+          return (
+            <p key={i} className="mt-1 font-semibold first:mt-0">
+              {heading[1]}
+            </p>
+          );
+        const bullet = /^\s*[-*]\s+(.*)/.exec(line);
+        if (bullet)
+          return (
+            <p key={i} className="pl-3 -indent-3">
+              • {bullet[1]}
+            </p>
+          );
+        return <p key={i}>{line}</p>;
+      })}
+    </div>
+  );
+}
+
+function UpdatesSection({
+  draft,
+  set,
+}: {
+  draft: Settings;
+  set: (f: (s: Settings) => void) => void;
+}) {
+  const { data: info } = useAppInfo();
+  const { data: update } = useAppUpdate();
+  const check = useCheckForUpdate();
+  const status = useUi((s) => s.updateCheck);
+  const busy = useUi((s) => Object.values(s.jobs).filter(isActive).length);
+  const [installError, setInstallError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{
+    done: number;
+    total: number | null;
+    phase: "downloading" | "installing" | "restarting";
+  } | null>(null);
+  const checking = status === "checking";
+  const error = installError ?? (typeof status === "object" ? status.error : null);
+
+  const install = async () => {
+    setInstallError(null);
+    setProgress({ done: 0, total: null, phase: "downloading" });
+    try {
+      await api().installAppUpdate((p) =>
+        setProgress((cur) => {
+          const base = cur ?? { done: 0, total: null, phase: "downloading" as const };
+          if (p.kind === "started") return { ...base, total: p.total };
+          if (p.kind === "chunk") return { ...base, done: base.done + p.bytes };
+          return { ...base, phase: "installing" };
+        }),
+      );
+      setProgress((cur) => cur && { ...cur, phase: "restarting" });
+    } catch (e) {
+      setProgress(null);
+      setInstallError(String(e));
+    }
+  };
+
+  const released = update?.date
+    ? new Date(update.date).toLocaleDateString(undefined, { dateStyle: "medium" })
+    : null;
+  const pct = progress?.total ? Math.min(100, (progress.done / progress.total) * 100) : null;
+
+  return (
+    <Section title="Updates" id="updates">
+      <Row label="Boxdeck version">
+        <div className="flex flex-wrap items-center gap-3 pt-0.5">
+          <span className="font-mono text-xs selectable">{info?.version ?? "…"}</span>
+          <Button
+            size="sm"
+            disabled={checking || progress !== null}
+            onClick={() => {
+              setInstallError(null);
+              void check();
+            }}
+          >
+            {checking ? "Checking…" : "Check for updates"}
+          </Button>
+          {status === "up_to_date" && !update && (
+            <span role="status" className="text-xs text-ok">
+              You're up to date.
+            </span>
+          )}
+        </div>
+        {error && (
+          <p role="alert" className="mt-2 text-xs text-danger selectable">
+            {error}
+          </p>
+        )}
+      </Row>
+      {update && (
+        <Row
+          label={`Boxdeck ${update.version} is available`}
+          hint={released ? `Released ${released}` : undefined}
+        >
+          {update.notes && <ReleaseNotes text={update.notes} />}
+          {progress ? (
+            <div role="status" aria-live="polite" className="flex flex-col gap-1.5">
+              <div
+                role="progressbar"
+                aria-label="Update download"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={pct === null ? undefined : Math.round(pct)}
+                className="h-1.5 overflow-hidden rounded-full bg-sunken"
+              >
+                <div
+                  className={cn(
+                    "progress-fill h-full rounded-full transition-[width]",
+                    pct === null && "anim-load",
+                  )}
+                  style={pct === null ? undefined : { width: `${pct}%` }}
+                />
+              </div>
+              <span className="text-xs text-muted">
+                {progress.phase === "downloading" &&
+                  (progress.total
+                    ? `Downloading ${mb(progress.done)} of ${mb(progress.total)} MB…`
+                    : `Downloading ${mb(progress.done)} MB…`)}
+                {progress.phase === "installing" && "Installing…"}
+                {progress.phase === "restarting" && "Restarting Boxdeck…"}
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="primary" disabled={busy > 0} onClick={() => void install()}>
+                Install and restart
+              </Button>
+              {busy > 0 && (
+                <span className="text-xs text-muted">
+                  Wait for running Vagrant jobs to finish first.
+                </span>
+              )}
+            </div>
+          )}
+        </Row>
+      )}
+      <Row label="Automatic check">
+        <Toggle
+          label="Check for updates when Boxdeck starts"
+          checked={draft.app.check_updates_on_launch}
+          onChange={(v) => set((s) => void (s.app.check_updates_on_launch = v))}
+        />
+      </Row>
     </Section>
   );
 }

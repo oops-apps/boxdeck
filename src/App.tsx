@@ -1,6 +1,6 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { lazy, Suspense } from "react";
-import { useAppInfo, useJobsSync, useRefreshOnFocus, useTrayRequests } from "./hooks";
+import { lazy, Suspense, useState } from "react";
+import { useAppInfo, useAppUpdate, useJobsSync, useRefreshOnFocus, useTrayRequests } from "./hooks";
 import { hasOverlayTitleBar } from "./ipc/api";
 import { useUi, type View } from "./state/store";
 import { isActive, prefetch } from "./hooks";
@@ -9,7 +9,7 @@ import { ActivityView } from "./views/ActivityView";
 import { BoxesView } from "./views/BoxesView";
 import { MachinesView } from "./views/MachinesView";
 import { SettingsView } from "./views/SettingsView";
-import { Icon, cn, type IconName } from "./components/ui";
+import { Button, Icon, cn, type IconName } from "./components/ui";
 
 // CodeMirror is most of the bundle and only the editor needs it, so it loads off the startup path.
 const loadVagrantfileView = () => import("./views/VagrantfileView");
@@ -19,8 +19,8 @@ const VagrantfileView = lazy(() =>
 prefetch(loadVagrantfileView);
 
 const NAV: { view: View; label: string; icon: IconName }[] = [
-  { view: "machines", label: "Machines", icon: "box" },
-  { view: "boxes", label: "Boxes", icon: "stack" },
+  { view: "machines", label: "Machines", icon: "monitor" },
+  { view: "boxes", label: "Boxes", icon: "box" },
   { view: "activity", label: "Activity", icon: "activity" },
   { view: "settings", label: "Settings", icon: "settings" },
 ];
@@ -33,7 +33,14 @@ function App() {
   const setView = useUi((s) => s.setView);
   const busy = useUi((s) => Object.values(s.jobs).filter(isActive).length);
   const { data: info } = useAppInfo();
+  const { data: update } = useAppUpdate();
+  const settingsTab = useUi((s) => s.settingsTab);
+  const setSettingsTab = useUi((s) => s.setSettingsTab);
+  /** Version the user said "Later" to; a newer one shows the banner again. */
+  const [dismissed, setDismissed] = useState<string | null>(null);
   const overlay = hasOverlayTitleBar();
+  const showUpdate =
+    update && update.version !== dismissed && !(view === "settings" && settingsTab === "about");
 
   return (
     <Tooltip.Provider>
@@ -90,6 +97,29 @@ function App() {
               className="border-b border-border bg-danger/10 px-4 py-2 text-xs selectable"
             >
               <strong className="text-danger">Vagrant isn't available.</strong> {info.vagrant_error}
+            </div>
+          )}
+          {showUpdate && (
+            <div
+              role="status"
+              className="flex items-center gap-2 border-b border-border bg-accent/15 px-4 py-1.5 text-xs"
+            >
+              <span>
+                <strong>Boxdeck {update.version}</strong> is available.
+              </span>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  setView("settings");
+                  setSettingsTab("about");
+                }}
+              >
+                View update
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setDismissed(update.version)}>
+                Later
+              </Button>
             </div>
           )}
           <main className="min-h-0 flex-1">

@@ -28,6 +28,8 @@ interface UiState {
   /** Project folder to expand in Settings → Projects. */
   settingsProject: string | null;
   openProjectSettings: (dir: string | null) => void;
+  /** Last manual check for a Boxdeck release (see `useCheckForUpdate`). */
+  updateCheck: "idle" | "checking" | "up_to_date" | { error: string };
   showHidden: boolean;
   setShowHidden: (v: boolean) => void;
 
@@ -66,6 +68,7 @@ export const useUi = create<UiState>((set) => ({
   setSettingsTab: (settingsTab) => set({ settingsTab }),
   openProjectSettings: (settingsProject) =>
     set({ settingsProject, view: "settings", settingsTab: "projects" }),
+  updateCheck: "idle",
   showHidden: false,
   setShowHidden: (showHidden) => set({ showHidden }),
 

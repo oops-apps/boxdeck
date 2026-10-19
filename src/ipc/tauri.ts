@@ -1,8 +1,10 @@
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { Api, PtyHandlers } from "./api";
+import type { AppUpdate } from "./generated/AppUpdate";
 import type { JobEvent } from "./generated/JobEvent";
 import type { TrayRequest } from "./generated/TrayRequest";
+import type { UpdateProgress } from "./generated/UpdateProgress";
 
 function ptyChannels(h: PtyHandlers) {
   const onData = new Channel<ArrayBuffer>();
@@ -86,6 +88,19 @@ export const tauriApi: Api = {
   },
   getApproval: (id) => invoke("get_approval", { id }),
   answerApproval: (id, allow) => invoke("answer_approval", { id, allow }),
+  pendingAppUpdate: () => invoke("pending_app_update"),
+  checkAppUpdate: () => invoke("check_app_update"),
+  installAppUpdate(onProgress) {
+    const channel = new Channel<UpdateProgress>();
+    channel.onmessage = onProgress;
+    return invoke("install_app_update", { onProgress: channel });
+  },
+  onAppUpdateAvailable(cb) {
+    const un = listen<AppUpdate>("update-available", (e) => cb(e.payload));
+    return () => {
+      void un.then((f) => f());
+    };
+  },
   onBoxesChanged(cb) {
     const un = listen("boxes-changed", () => cb());
     return () => {

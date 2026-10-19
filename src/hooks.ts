@@ -1,7 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { api } from "./ipc/api";
 import type { Action } from "./ipc/generated/Action";
+import type { AppUpdate } from "./ipc/generated/AppUpdate";
 import type { JobInfo } from "./ipc/generated/JobInfo";
 import type { Project } from "./ipc/generated/Project";
 import type { Settings } from "./ipc/generated/Settings";
@@ -9,6 +10,31 @@ import { emitJobLine, useUi } from "./state/store";
 
 export function useAppInfo() {
   return useQuery({ queryKey: ["app-info"], queryFn: () => api().appInfo() });
+}
+
+/** A newer Boxdeck release, once a check (at launch or by hand) has found one. */
+export function useAppUpdate() {
+  const qc = useQueryClient();
+  useEffect(
+    () => api().onAppUpdateAvailable((u) => qc.setQueryData<AppUpdate | null>(["app-update"], u)),
+    [qc],
+  );
+  return useQuery({ queryKey: ["app-update"], queryFn: () => api().pendingAppUpdate() });
+}
+
+/** Checks for a Boxdeck release now; the outcome lands in `updateCheck` and `useAppUpdate`. */
+export function useCheckForUpdate() {
+  const qc = useQueryClient();
+  return useCallback(async () => {
+    useUi.setState({ updateCheck: "checking" });
+    try {
+      const found = await api().checkAppUpdate();
+      qc.setQueryData<AppUpdate | null>(["app-update"], found);
+      useUi.setState({ updateCheck: found ? "idle" : "up_to_date" });
+    } catch (e) {
+      useUi.setState({ updateCheck: { error: String(e) } });
+    }
+  }, [qc]);
 }
 
 export function useMachines() {
@@ -99,6 +125,8 @@ export function useTrayRequests() {
   const openTab = useUi((s) => s.openTab);
   const setView = useUi((s) => s.setView);
   const setSearch = useUi((s) => s.setSearch);
+  const setSettingsTab = useUi((s) => s.setSettingsTab);
+  const checkForUpdate = useCheckForUpdate();
   useEffect(
     () =>
       api().onTrayRequest((r) => {
@@ -113,11 +141,15 @@ export function useTrayRequests() {
         } else if (r.kind === "show_machine") {
           setView("machines");
           setSearch(r.machine);
+        } else if (r.kind === "check_updates") {
+          setView("settings");
+          setSettingsTab("about");
+          void checkForUpdate();
         } else {
           setView("settings");
         }
       }),
-    [openTab, setView, setSearch],
+    [openTab, setView, setSearch, setSettingsTab, checkForUpdate],
   );
 }
 

@@ -31,6 +31,14 @@
       "csp": "default-src 'self'; img-src 'self' asset: data:; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost"
     }
   },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE5MkU4MDVDMkZEMkM3N0MKUldSOHg5SXZYSUF1cWRYZDhDK3V0VW03K2F0TjJPUnUzOE9VcVFaRHpSdGoyN2t3d0JrZWRRam0K",
+      "endpoints": [
+        "https://github.com/oops-apps/boxdeck/releases/latest/download/latest.json"
+      ]
+    }
+  },
   "bundle": {
     "active": true,
     "targets": [

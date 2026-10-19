@@ -41,6 +41,8 @@ pub enum TrayRequest {
         machine: String,
     },
     ShowSettings,
+    /// Open the updates section and check now.
+    CheckUpdates,
 }
 
 /// Menu ids point into this table instead of carrying paths.
@@ -243,6 +245,7 @@ fn build_menu<R: Runtime>(
                 .checked(autostart)
                 .build(app)?,
         )
+        .item(&MenuItemBuilder::with_id("updates", "Check for Updates…").build(app)?)
         .item(&PredefinedMenuItem::separator(app)?)
         .item(&MenuItemBuilder::with_id("quit", "Quit Boxdeck").build(app)?);
     menu.build()
@@ -359,6 +362,10 @@ fn on_menu(app: &AppHandle, id: &str) {
         (Some("settings"), None, None) => {
             show_main(app);
             let _ = app.emit(TRAY_REQUEST, TrayRequest::ShowSettings);
+        }
+        (Some("updates"), None, None) => {
+            show_main(app);
+            let _ = app.emit(TRAY_REQUEST, TrayRequest::CheckUpdates);
         }
         (Some("autostart"), None, None) => toggle_autostart(app),
         (Some("pause-agents"), None, None) => {

@@ -1,6 +1,7 @@
 import type { Action } from "./generated/Action";
 import type { ActionOptions } from "./generated/ActionOptions";
 import type { AppInfo } from "./generated/AppInfo";
+import type { AppUpdate } from "./generated/AppUpdate";
 import type { AuditEntry } from "./generated/AuditEntry";
 import type { McpStatus } from "./generated/McpStatus";
 import type { PendingApproval } from "./generated/PendingApproval";
@@ -18,6 +19,7 @@ import type { Settings } from "./generated/Settings";
 import type { VagrantfileText } from "./generated/VagrantfileText";
 import type { ValidateResult } from "./generated/ValidateResult";
 import type { TrayRequest } from "./generated/TrayRequest";
+import type { UpdateProgress } from "./generated/UpdateProgress";
 
 export type Unsubscribe = () => void;
 
@@ -92,6 +94,12 @@ export interface Api {
   onAuditChanged(cb: () => void): Unsubscribe;
   getApproval(id: number): Promise<PendingApproval | null>;
   answerApproval(id: number, allow: boolean): Promise<void>;
+  /** The release found by the launch check or the last manual check; no network call. */
+  pendingAppUpdate(): Promise<AppUpdate | null>;
+  checkAppUpdate(): Promise<AppUpdate | null>;
+  /** Downloads and installs the checked release, then restarts Boxdeck. */
+  installAppUpdate(onProgress: (p: UpdateProgress) => void): Promise<void>;
+  onAppUpdateAvailable(cb: (u: AppUpdate) => void): Unsubscribe;
 }
 
 /** macOS app window with the title bar merged into the content (traffic lights over the UI). */

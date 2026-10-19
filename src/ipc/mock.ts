@@ -2,6 +2,7 @@
 // stream output and change machine state, and a terminal that echoes input.
 import type { Api, PtyHandlers } from "./api";
 import type { Action } from "./generated/Action";
+import type { AppUpdate } from "./generated/AppUpdate";
 import type { AuditEntry } from "./generated/AuditEntry";
 import type { BoxInfo } from "./generated/BoxInfo";
 import type { PopularBox } from "./generated/PopularBox";
@@ -108,6 +109,7 @@ export function defaultSettings(): Settings {
       menu_bar_only: false,
       launch_at_login: false,
       notify_on_finish: true,
+      check_updates_on_launch: true,
     },
     bookmarks: [],
     mcp: {
@@ -149,6 +151,14 @@ end
 `;
 
 const BENTO = ["vmware_desktop", "virtualbox", "parallels", "utm"];
+const MOCK_UPDATE: AppUpdate = {
+  version: "0.2.0",
+  current_version: "0.1.0",
+  notes:
+    "### Added\n\n- Snapshots: take, restore and delete from the machine menu.\n\n### Fixed\n\n- Status refresh no longer stalls when a provider is slow.",
+  date: "2026-11-02T09:00:00Z",
+};
+
 const MOCK_POPULAR: PopularBox[] = [
   {
     name: "bento/ubuntu-24.04",
@@ -191,6 +201,7 @@ export function createMockApi(opts: { stepMs?: number; vagrantMissing?: boolean 
   let vagrantMissing = opts.vagrantMissing ?? false;
   let boxes = seedBoxes();
   let settings = defaultSettings();
+  let pendingUpdate: AppUpdate | null = null;
   const files = new Map<string, string>();
   const tokens = new Map<string, string>();
   const audit: AuditEntry[] = [
@@ -539,6 +550,22 @@ export function createMockApi(opts: { stepMs?: number; vagrantMissing?: boolean 
       expires_at: Date.now() + 120_000,
     }),
     answerApproval: async () => {},
+    pendingAppUpdate: async () => pendingUpdate,
+    async checkAppUpdate() {
+      await new Promise((r) => setTimeout(r, step));
+      pendingUpdate = MOCK_UPDATE;
+      return pendingUpdate;
+    },
+    async installAppUpdate(onProgress) {
+      const total = 12_000_000;
+      onProgress({ kind: "started", total });
+      for (let done = 0; done < total; done += 1_500_000) {
+        await new Promise((r) => setTimeout(r, step / 2));
+        onProgress({ kind: "chunk", bytes: 1_500_000 });
+      }
+      onProgress({ kind: "installing" });
+    },
+    onAppUpdateAvailable: () => () => {},
     popularBoxes: async () => MOCK_POPULAR,
     async searchBoxes(query, provider) {
       const all = [
