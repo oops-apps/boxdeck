@@ -4,6 +4,8 @@ All notable changes to Boxdeck are recorded here. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+## [0.1.0-beta.5] - 2026-10-19
+
 ### Added
 
 - Agents can work inside VMs: `ssh_exec` runs a command (optionally in a folder) and returns its output, or a job to follow when it runs long; `vm_upload` and `vm_download` copy files between the VM and the project folder. Turn it on under Settings → MCP / Agents → Shell access in VMs; it needs Operate access.
