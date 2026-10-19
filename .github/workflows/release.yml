@@ -33,6 +33,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       tag: ${{ steps.version.outputs.tag }}
+      msi_version: ${{ steps.version.outputs.msi_version }}
       release_id: ${{ steps.release.outputs.id }}
     steps:
       - uses: actions/checkout@v7.0.1
@@ -54,6 +55,11 @@ jobs:
           [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "::error::'$v' is not a semver version"; exit 1; }
           echo "version=$v" >> "$GITHUB_OUTPUT"
           echo "tag=v$v" >> "$GITHUB_OUTPUT"
+          # MSI versions are numeric only, so 0.2.0-beta.3 installs as 0.2.0.3.
+          if [[ "$v" == *-* ]]; then
+            pre="${v#*-}"; n=0; [[ "$pre" =~ ([0-9]+)$ ]] && n="${BASH_REMATCH[1]}"
+            echo "msi_version=${v%%-*}.$n" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Bump versions, date the changelog, tag
         if: github.event_name == 'workflow_dispatch'
@@ -145,6 +151,16 @@ jobs:
 
       - run: npm ci
 
+      - id: msi
+        name: Set the MSI version for a pre-release
+        if: runner.os == 'Windows' && needs.prepare.outputs.msi_version != ''
+        shell: bash
+        env:
+          MSI_VERSION: ${{ needs.prepare.outputs.msi_version }}
+        run: |
+          echo "{\"bundle\":{\"windows\":{\"wix\":{\"version\":\"$MSI_VERSION\"}}}}" > msi-version.json
+          echo "args=--config msi-version.json" >> "$GITHUB_OUTPUT"
+
       # beforeBuildCommand builds the boxdeck-mcp sidecar for the same target.
       - uses: tauri-apps/tauri-action@v1.0.0
         env:
@@ -153,7 +169,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.prepare.outputs.release_id }}
-          args: --target ${{ matrix.target }}
+          args: --target ${{ matrix.target }} ${{ steps.msi.outputs.args }}
 
       - name: Attach standalone boxdeck-mcp
         shell: bash
