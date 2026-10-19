@@ -8,7 +8,7 @@ mod tray;
 
 use boxdeck_core::jobs::{JobEvent, JobState};
 use state::AppState;
-use tauri::{Manager, RunEvent, WindowEvent};
+use tauri::{Manager, WindowEvent};
 use tauri_plugin_notification::NotificationExt;
 
 /// Passed by the login item, so an automatic start stays in the tray.
@@ -111,7 +111,7 @@ pub fn run() {
     app.run(|app, event| {
         // macOS: clicking the Dock icon while the window is hidden brings it back.
         #[cfg(target_os = "macos")]
-        if let RunEvent::Reopen { .. } = event {
+        if let tauri::RunEvent::Reopen { .. } = event {
             tray::show_main(app);
         }
         #[cfg(not(target_os = "macos"))]
