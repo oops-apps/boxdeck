@@ -4,6 +4,11 @@ All notable changes to Boxdeck are recorded here. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+### Changed
+
+- Betas are published as regular releases, so the in-app updater finds them. Updating from 0.1.0-beta.3 starts with this release.
+- Releases no longer include separate `boxdeck-mcp` downloads. Use the copy inside the app; Settings → MCP / Agents shows its path.
+
 ## [0.1.0-beta.3] - 2026-10-19
 
 ### Added

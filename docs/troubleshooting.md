@@ -50,8 +50,6 @@ Later releases are ad-hoc signed, so macOS shows this instead.
 
 On macOS 14 and earlier, right-clicking the app and choosing **Open**, then **Open** again, also works.
 
-The standalone `boxdeck-mcp` download gets the same flag. Clear it with `xattr -d com.apple.quarantine boxdeck-mcp`.
-
 ### Windows: "Windows protected your PC"
 
 SmartScreen warns about new unsigned apps. Choose **More info → Run anyway**.

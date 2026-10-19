@@ -98,10 +98,11 @@ jobs:
           awk -v h="## [$V]" 'index($0, h) == 1 {f = 1; next} f && /^## \[/ {exit} f' CHANGELOG.md > notes.md
           [[ -s notes.md ]] || echo "See [CHANGELOG.md](https://github.com/$GITHUB_REPOSITORY/blob/main/CHANGELOG.md)." > notes.md
           id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -1)
+          # Never a pre-release, betas included: the updater reads releases/latest, which GitHub
+          # never points at a pre-release.
           if [[ -z "$id" ]]; then
-            prerelease=false; [[ "$V" == *-* ]] && prerelease=true
             id=$(gh api "repos/$GITHUB_REPOSITORY/releases" -f tag_name="$TAG" -f name="Boxdeck $TAG" \
-              -F body=@notes.md -F draft=true -F prerelease="$prerelease" --jq .id)
+              -F body=@notes.md -F draft=true -F prerelease=false --jq .id)
           fi
           echo "id=$id" >> "$GITHUB_OUTPUT"
 
@@ -169,6 +170,8 @@ jobs:
 
       # beforeBuildCommand builds the boxdeck-mcp sidecar for the same target. Signed updater
       # bundles and latest.json only here, so local builds don't need the signing key.
+      # The .sig files stay out of the release: latest.json carries each signature inline, and the
+      # app never downloads them. Keep latest.json and the .app.tar.gz files; the updater needs them.
       - uses: tauri-apps/tauri-action@v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -176,23 +179,8 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.prepare.outputs.release_id }}
+          uploadUpdaterSignatures: false
           args: --target ${{ matrix.target }} --config src-tauri/tauri.updater.conf.json ${{ steps.pre.outputs.args }}
-
-      - name: Attach standalone boxdeck-mcp
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-          TARGET: ${{ matrix.target }}
-        run: |
-          ext=""; [[ "$TARGET" == *windows* ]] && ext=".exe"
-          name="boxdeck-mcp-$TAG-$TARGET"
-          mkdir -p "$name"
-          cp "target/$TARGET/release/boxdeck-mcp$ext" "$name/"
-          cp LICENSE "$name/"
-          if [[ "$ext" == ".exe" ]]; then 7z a "$name.zip" "$name" >/dev/null; f="$name.zip";
-          else tar -czf "$name.tar.gz" "$name"; f="$name.tar.gz"; fi
-          gh release upload "$TAG" "$f" --clobber
 
   publish:
     name: Publish
