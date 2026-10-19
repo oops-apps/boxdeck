@@ -367,13 +367,14 @@ VAGRANT_DEFAULT_PROVIDER=vmware_desktop vagrant status</code></pre>
       <p>GNOME needs the AppIndicator extension to show tray icons. Everything in the tray is also available in the main window.</p>
 
       <h3 id="ts-unsigned">Unsigned app warnings (macOS and Windows)<a class="anchor" href="#ts-unsigned" aria-label="Link to this section">#</a></h3>
-      <p>Boxdeck releases aren't code-signed or notarized yet, so macOS and Windows warn the first time you open them. Every release is built in public by the <a href="https://github.com/oops-apps/boxdeck/actions/workflows/release.yml">Release workflow</a>; if you'd rather not bypass the warning, <a href="https://github.com/oops-apps/boxdeck#development">build it from source</a>. You only need to do this once per install.</p>
+      <p>Boxdeck releases aren't signed with a developer certificate or notarized yet, so macOS and Windows warn the first time you open them. Every release is built in public by the <a href="https://github.com/oops-apps/boxdeck/actions/workflows/release.yml">Release workflow</a>; if you'd rather not bypass the warning, <a href="https://github.com/oops-apps/boxdeck#development">build it from source</a>. You only need to do this once per install.</p>
 
       <h4 id="ts-mac-damaged">macOS: "Boxdeck is damaged and can't be opened"<a class="anchor" href="#ts-mac-damaged" aria-label="Link to this section">#</a></h4>
-      <p>The file isn't broken: macOS flags unsigned apps downloaded from the internet this way, mostly on Apple Silicon. After dragging Boxdeck to Applications, clear the download flag in Terminal:</p>
+      <p>v0.1.0-beta.1 isn't signed at all, and macOS reports unsigned apps downloaded from the internet this way, mostly on Apple Silicon. The file isn't broken. After dragging Boxdeck to Applications, clear the download flag in Terminal:</p>
 <pre><code>xattr -dr com.apple.quarantine /Applications/Boxdeck.app</code></pre>
 
       <h4 id="ts-mac-verify">macOS: "Apple could not verify Boxdeck is free of malware"<a class="anchor" href="#ts-mac-verify" aria-label="Link to this section">#</a></h4>
+      <p>Later releases are ad-hoc signed, so macOS shows this instead.</p>
       <ol>
         <li>Open Boxdeck once and close the dialog with <strong>Done</strong> (not <strong>Move to Trash</strong>).</li>
         <li>Open <strong>System Settings → Privacy &amp; Security</strong>, scroll to <strong>Security</strong> and click <strong>Open Anyway</strong> next to the Boxdeck message.</li>

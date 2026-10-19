@@ -30,17 +30,19 @@ GNOME needs the AppIndicator extension to show tray icons. Everything in the tra
 
 ## Unsigned app warnings (macOS and Windows)
 
-Boxdeck releases aren't code-signed or notarized yet, so macOS and Windows warn the first time you open them. Every release is built in public by the [Release workflow](https://github.com/oops-apps/boxdeck/actions/workflows/release.yml); if you'd rather not bypass the warning, [build it from source](../README.md#development). You only need to do this once per install.
+Boxdeck releases aren't signed with a developer certificate or notarized yet, so macOS and Windows warn the first time you open them. Every release is built in public by the [Release workflow](https://github.com/oops-apps/boxdeck/actions/workflows/release.yml); if you'd rather not bypass the warning, [build it from source](../README.md#development). You only need to do this once per install.
 
 ### macOS: "Boxdeck is damaged and can't be opened"
 
-The file isn't broken: macOS flags unsigned apps downloaded from the internet this way, mostly on Apple Silicon. After dragging Boxdeck to Applications, clear the download flag in Terminal:
+v0.1.0-beta.1 isn't signed at all, and macOS reports unsigned apps downloaded from the internet this way, mostly on Apple Silicon. The file isn't broken. After dragging Boxdeck to Applications, clear the download flag in Terminal:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/Boxdeck.app
 ```
 
 ### macOS: "Apple could not verify Boxdeck is free of malware"
+
+Later releases are ad-hoc signed, so macOS shows this instead.
 
 1. Open Boxdeck once and close the dialog with **Done** (not **Move to Trash**).
 2. Open **System Settings → Privacy & Security**, scroll to **Security** and click **Open Anyway** next to the Boxdeck message.
