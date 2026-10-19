@@ -151,15 +151,21 @@ jobs:
 
       - run: npm ci
 
-      - id: msi
-        name: Set the MSI version for a pre-release
-        if: runner.os == 'Windows' && needs.prepare.outputs.msi_version != ''
+      # MSI and rpm versions can't carry a pre-release suffix: give the MSI a numeric version and
+      # skip the rpm (the .deb and AppImage accept it).
+      - id: pre
+        name: Adjust bundles for a pre-release
+        if: runner.os != 'macOS' && needs.prepare.outputs.msi_version != ''
         shell: bash
         env:
           MSI_VERSION: ${{ needs.prepare.outputs.msi_version }}
         run: |
-          echo "{\"bundle\":{\"windows\":{\"wix\":{\"version\":\"$MSI_VERSION\"}}}}" > msi-version.json
-          echo "args=--config msi-version.json" >> "$GITHUB_OUTPUT"
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            echo "{\"bundle\":{\"windows\":{\"wix\":{\"version\":\"$MSI_VERSION\"}}}}" > msi-version.json
+            echo "args=--config msi-version.json" >> "$GITHUB_OUTPUT"
+          else
+            echo "args=--bundles deb,appimage" >> "$GITHUB_OUTPUT"
+          fi
 
       # beforeBuildCommand builds the boxdeck-mcp sidecar for the same target.
       - uses: tauri-apps/tauri-action@v1.0.0
@@ -169,7 +175,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.prepare.outputs.release_id }}
-          args: --target ${{ matrix.target }} ${{ steps.msi.outputs.args }}
+          args: --target ${{ matrix.target }} ${{ steps.pre.outputs.args }}
 
       - name: Attach standalone boxdeck-mcp
         shell: bash

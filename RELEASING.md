@@ -9,7 +9,7 @@
    - builds macOS (Apple Silicon and Intel), Windows and Linux bundles plus standalone `boxdeck-mcp` archives into it;
    - publishes the release once every build succeeds, if you ticked **Publish**. Otherwise check the draft and publish it yourself.
 
-A version with a suffix such as `0.2.0-beta.1` becomes a pre-release. Windows MSI versions must be numeric, so its `.msi` is built as `0.2.0.1`, taking the suffix's trailing number.
+A version with a suffix such as `0.2.0-beta.1` becomes a pre-release. Windows MSI versions must be numeric, so its `.msi` is built as `0.2.0.1`, taking the suffix's trailing number. rpm versions can't contain `-`, so pre-releases ship no `.rpm`; the `.deb` and AppImage are still built.
 
 The workflow pushes to `main` with the built-in `GITHUB_TOKEN`. If `main` is protected, allow GitHub Actions to bypass the rule, or bump the versions in a pull request and push the tag by hand instead: `git tag v0.2.0 && git push origin v0.2.0` builds the same draft release, after checking the tag matches the versions in the code.
 
