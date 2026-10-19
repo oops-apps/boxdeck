@@ -54,6 +54,9 @@
     ],
     "category": "DeveloperTool",
     "shortDescription": "Desktop GUI for HashiCorp Vagrant",
-    "copyright": "Copyright (c) 2026 oops-apps. MIT License."
+    "copyright": "Copyright (c) 2026 oops-apps. MIT License.",
+    "macOS": {
+      "signingIdentity": "-"
+    }
   }
 }
