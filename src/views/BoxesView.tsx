@@ -113,7 +113,7 @@ export function BoxesView() {
         )}
         {boxes && boxes.length === 0 && (
           <div className="mx-auto mt-16 max-w-sm text-center">
-            <Icon name="stack" className="mx-auto size-8 text-muted" />
+            <Icon name="box" className="mx-auto size-8 text-muted" />
             <p className="mt-3 font-medium">No boxes installed</p>
             <p className="mt-1 text-muted">
               Boxes are downloaded on your first <code className="font-mono">vagrant up</code>, or

@@ -2,6 +2,8 @@ import { lazy, Suspense, useState, type ComponentProps } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { isActive, prefetch } from "../hooks";
 import { api } from "../ipc/api";
+import type { LogLine } from "../ipc/generated/LogLine";
+import { colorizeLine } from "../lib/vagrantLog";
 import { onJobLine, useUi, type DockTab } from "../state/store";
 import { Button, ConfirmDialog, Icon, IconButton, cn } from "../components/ui";
 
@@ -128,7 +130,16 @@ function JobTab({ jobId }: { jobId: number }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-8 shrink-0 items-center gap-2 border-y border-border px-3 text-xs">
+      <div className="relative flex h-8 shrink-0 items-center gap-2 border-y border-border px-3 text-xs">
+        {job && isActive(job) && (
+          <span
+            role="progressbar"
+            aria-label={`${job.label} running`}
+            className="absolute inset-x-0 -bottom-px h-0.5 overflow-hidden"
+          >
+            <span className="progress-fill anim-load block h-full rounded-full" />
+          </span>
+        )}
         <code className="truncate font-mono text-muted selectable">
           {job?.argv.slice(1).join(" ")}
         </code>
@@ -156,11 +167,11 @@ function JobTab({ jobId }: { jobId: number }) {
           onReady={(term) => {
             let last = -1;
             let loaded = false;
-            const pending: { seq: number; text: string }[] = [];
-            const write = (l: { seq: number; text: string }) => {
+            const pending: LogLine[] = [];
+            const write = (l: LogLine) => {
               if (l.seq <= last) return;
               last = l.seq;
-              term.writeln(l.text);
+              term.writeln(colorizeLine(l));
             };
             const unsubscribe = onJobLine(jobId, (l) => (loaded ? write(l) : pending.push(l)));
             void api()

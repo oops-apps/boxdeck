@@ -4,6 +4,16 @@ All notable changes to Boxdeck are recorded here. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+### Added
+
+- In-app updates: Boxdeck checks GitHub Releases at startup (can be turned off), shows the release notes, and installs a signed update and restarts from Settings → Backup & about or the tray.
+- Job output in color: Vagrant's `==>` steps, details, forwarded ports and errors are easy to tell apart.
+
+### Changed
+
+- The app's look follows the website: state dots (a lit green dot for running), Up and Resume as the main action, a red stop icon on Halt, a tinted selected row, the sweeping progress bar while a job runs, and the website's dark palette.
+- The sidebar uses a monitor icon for Machines and the box icon for Boxes.
+
 ## [0.1.0-beta.2] - 2026-10-19
 
 ### Changed

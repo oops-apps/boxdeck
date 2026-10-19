@@ -17,25 +17,37 @@
   --accent-text: #ffffff;
   --danger: #c8322b;
   --danger-text: #ffffff;
-  --ok: #1f8a4c;
-  --warn: #b26a00;
+  /* Darker than the dark-theme hues so small text keeps 4.5:1 on white. */
+  --ok: #137738;
+  --warn: #9c5906;
   --idle: #8a8a94;
   --focus: #4d6cdf;
+  /* Progress fill; the dark theme uses the website's indigo-to-pearl, light needs more contrast. */
+  --progress-from: #4d6cdf;
+  --progress-to: #8da2f5;
   --term-bg: #16161a;
   --term-fg: #e6e6ea;
+  /* The terminal stays dark in both themes, so its ANSI colors don't change with them. */
+  --term-red: #ff6b62;
+  --term-green: #4cc884;
+  --term-yellow: #f0a937;
+  --term-blue: #8da2f5;
+  --term-magenta: #b9c6f8;
+  --term-dim: #6e6e72;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121214;
-    --panel: #19191c;
+    /* The website's app window: #141416 body, #101012 sidebar, 7% white hairlines. */
+    --bg: #141416;
+    --panel: #18181a;
     --sunken: #101012;
-    --hover: #2e2e35;
-    --active: #3a3a42;
-    --border: #2b2b30;
-    --text: #ececef;
-    --muted: #9c9ca7;
+    --hover: #2a2a2e;
+    --active: #343439;
+    --border: #252527;
+    --text: #f5f5f5;
+    --muted: #a6a6a6;
     --accent: #8da2f5;
     --accent-solid: #4d6cdf;
     --accent-text: #ffffff;
@@ -43,9 +55,11 @@
     --danger-text: #1d0605;
     --ok: #4cc884;
     --warn: #f0a937;
-    --idle: #8a8a94;
+    --idle: #6e6e72;
     --focus: #8da2f5;
-    --term-bg: #0d0d10;
+    --progress-from: #8da2f5;
+    --progress-to: #c0cef2;
+    --term-bg: #0b0b0d;
     --term-fg: #e6e6ea;
     color-scheme: dark;
   }
@@ -216,11 +230,33 @@ textarea {
   animation: state-wash 1400ms ease-out;
 }
 
+/* The website's job progress bar: a gradient fill that sweeps while work runs. */
+@keyframes load {
+  from {
+    width: 8%;
+  }
+  to {
+    width: 96%;
+  }
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, var(--progress-from), var(--progress-to));
+}
+
+.anim-load {
+  animation: load 2.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
 /* Reduced motion keeps the fades and the color wash, which carry state, but drops the movement. */
 @media (prefers-reduced-motion: reduce) {
   .animate-spin,
   .animate-pulse {
     animation: none;
+  }
+  .anim-load {
+    animation: none;
+    width: 60%;
   }
   .anim-dialog[data-state="open"],
   .anim-popover[data-state="open"],

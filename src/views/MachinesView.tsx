@@ -235,11 +235,11 @@ export function MachinesView() {
           className="flex items-center gap-2 border-b border-border bg-sunken px-4 py-1.5"
         >
           <span className="text-xs font-medium">{selected.size} selected</span>
-          <Button size="sm" onClick={() => bulk("up")}>
+          <Button size="sm" variant="primary" onClick={() => bulk("up")}>
             <Icon name="play" className="size-3" /> Up
           </Button>
           <Button size="sm" onClick={() => bulk("halt")}>
-            <Icon name="stop" className="size-3" /> Halt
+            <Icon name="stop" className="size-3 text-danger" /> Halt
           </Button>
           <Button size="sm" variant="ghost" onClick={clearSelected}>
             Clear
@@ -265,7 +265,7 @@ export function MachinesView() {
         {info?.vagrant_error && total === 0 && <VagrantSetup info={info} />}
         {!isLoading && !error && total === 0 && !info?.vagrant_error && (
           <div className="mx-auto mt-16 max-w-sm text-center">
-            <Icon name="box" className="mx-auto size-8 text-muted" />
+            <Icon name="monitor" className="mx-auto size-8 text-muted" />
             <p className="mt-3 font-medium">No Vagrant machines yet</p>
             <p className="mt-1 text-muted">
               Machines appear here once you run <code className="font-mono">vagrant up</code> in a
@@ -523,7 +523,12 @@ const MachineRow = memo(function MachineRow({
   ];
 
   return (
-    <li className="group relative flex items-center gap-3 border-b border-border px-3 py-2 last:border-b-0 hover:bg-sunken/60">
+    <li
+      className={cn(
+        "group relative flex items-center gap-3 border-b border-border px-3 py-2 last:border-b-0",
+        isSelected ? "bg-accent/10" : "hover:bg-sunken/60",
+      )}
+    >
       {changes > 0 && (
         <span
           key={changes}
@@ -572,15 +577,15 @@ const MachineRow = memo(function MachineRow({
       )}
       <div className="flex shrink-0 items-center gap-1">
         {suspended ? (
-          <Button size="sm" onClick={() => act("resume")} disabled={!!job}>
+          <Button size="sm" variant="primary" onClick={() => act("resume")} disabled={!!job}>
             <Icon name="play" className="size-3" /> Resume
           </Button>
         ) : running ? (
           <Button size="sm" onClick={() => act("halt")} disabled={!!job}>
-            <Icon name="stop" className="size-3" /> Halt
+            <Icon name="stop" className="size-3 text-danger" /> Halt
           </Button>
         ) : (
-          <Button size="sm" onClick={() => act("up")} disabled={!!job}>
+          <Button size="sm" variant="primary" onClick={() => act("up")} disabled={!!job}>
             <Icon name="play" className="size-3" /> Up
           </Button>
         )}

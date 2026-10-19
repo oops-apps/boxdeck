@@ -4,9 +4,22 @@ import { useEffect, useRef, useState } from "react";
 
 function theme(): ITheme {
   const css = getComputedStyle(document.documentElement);
+  const v = (name: string) => css.getPropertyValue(name).trim() || undefined;
+  // ANSI colors come from the app palette, for job logs and for shells in SSH tabs alike.
   return {
-    background: css.getPropertyValue("--term-bg").trim() || "#16161a",
-    foreground: css.getPropertyValue("--term-fg").trim() || "#e6e6ea",
+    background: v("--term-bg") ?? "#16161a",
+    foreground: v("--term-fg") ?? "#e6e6ea",
+    red: v("--term-red"),
+    brightRed: v("--term-red"),
+    green: v("--term-green"),
+    brightGreen: v("--term-green"),
+    yellow: v("--term-yellow"),
+    brightYellow: v("--term-yellow"),
+    blue: v("--term-blue"),
+    brightBlue: v("--term-blue"),
+    magenta: v("--term-magenta"),
+    brightMagenta: v("--term-magenta"),
+    brightBlack: v("--term-dim"),
   };
 }
 

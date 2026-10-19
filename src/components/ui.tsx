@@ -24,6 +24,8 @@ const ICONS = {
     "M8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4",
   warning: "M8 2 14.5 13.5h-13zM8 6.5v3M8 11.5h.01",
   box: "M2.5 5 8 2.5 13.5 5v6L8 13.5 2.5 11zM2.5 5 8 7.5 13.5 5M8 7.5v6",
+  monitor:
+    "M3.3 3h9.4c.7 0 1.3.6 1.3 1.3v5.4c0 .7-.6 1.3-1.3 1.3H3.3C2.6 11 2 10.4 2 9.7V4.3C2 3.6 2.6 3 3.3 3zM5.5 13.5h5M8 11v2.5",
   stack: "M2 5.5 8 2.5l6 3-6 3zM2 8.5l6 3 6-3M2 11.5l6 3 6-3",
   plus: "M8 3v10M3 8h10",
 } as const;
@@ -196,24 +198,21 @@ export function ConfirmDialog({
   );
 }
 
-/** How each Vagrant state is shown: a shape and a word, so color is never the only cue. */
-export function stateStyle(state: string): { tone: string; glyph: string } {
+/** Each Vagrant state's color: a dot beside the state word, as on the website. */
+export function stateStyle(state: string): { tone: string; dot: string } {
   switch (state) {
     case "running":
-      return { tone: "text-ok", glyph: "●" };
+      // A lit dot with a soft ring, like a power LED.
+      return { tone: "text-ok", dot: "bg-ok ring-[3px] ring-ok/20" };
     case "saved":
     case "suspended":
     case "paused":
-      return { tone: "text-warn", glyph: "◐" };
-    case "not_created":
-      return { tone: "text-muted", glyph: "○" };
+      return { tone: "text-warn", dot: "bg-warn" };
     case "aborted":
     case "error":
-      return { tone: "text-danger", glyph: "▲" };
-    case "unknown":
-      return { tone: "text-muted", glyph: "?" };
+      return { tone: "text-danger", dot: "bg-danger" };
     default:
-      return { tone: "text-idle", glyph: "■" };
+      return { tone: "text-idle", dot: "bg-idle" };
   }
 }
 
@@ -237,24 +236,22 @@ export function StateBadge({
   state: string;
   label: string;
   stale?: boolean;
-  /** From `useChangeCount(state)`; a new value replays the glyph's settle animation. */
+  /** From `useChangeCount(state)`; a new value replays the dot's settle animation. */
   changes?: number;
 }) {
-  const { tone, glyph } = stateStyle(state);
+  const { dot } = stateStyle(state);
   return (
     <span
-      className={cn("inline-flex items-center gap-1.5 text-xs font-medium", tone)}
+      className="inline-flex items-center gap-2 font-mono text-xs text-muted"
       title={stale ? "Cached state from Vagrant's index; may be out of date" : undefined}
     >
       <span
         key={changes}
         aria-hidden="true"
-        className={cn("text-[10px] leading-none", changes > 0 && "anim-glyph")}
-      >
-        {glyph}
-      </span>
-      <span className="text-text">{label}</span>
-      {stale && <span className="text-muted">(cached)</span>}
+        className={cn("size-2 shrink-0 rounded-full", dot, changes > 0 && "anim-glyph")}
+      />
+      {label}
+      {stale && <span className="font-sans text-muted">(cached)</span>}
     </span>
   );
 }

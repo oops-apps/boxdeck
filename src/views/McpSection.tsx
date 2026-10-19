@@ -9,17 +9,25 @@ import { Button, ConfirmDialog, Icon, cn } from "../components/ui";
 
 const field = "h-7 rounded-md border border-border bg-panel px-2 outline-none focus:border-accent";
 
-const LEVELS: { value: AccessLevel; label: string; hint: string }[] = [
-  { value: "read", label: "Read", hint: "List machines, boxes, jobs and Vagrantfiles" },
+// Colored by how much an agent can change: read-only, operate, destructive.
+const LEVELS: { value: AccessLevel; label: string; hint: string; tone: string }[] = [
+  {
+    value: "read",
+    label: "Read",
+    hint: "List machines, boxes, jobs and Vagrantfiles",
+    tone: "text-ok",
+  },
   {
     value: "operate",
     label: "Operate",
     hint: "Also start, stop, reload and provision; add and update boxes",
+    tone: "text-accent",
   },
   {
     value: "full",
     label: "Full",
     hint: "Also destroy, remove boxes and edit Vagrantfiles, each approved by you",
+    tone: "text-danger",
   },
 ];
 
@@ -155,7 +163,8 @@ export function McpSection({
                   className="mt-0.5 accent-accent"
                 />
                 <span>
-                  {l.label} <span className="text-xs text-muted">{l.hint}</span>
+                  <span className={cn("font-medium", l.tone)}>{l.label}</span>{" "}
+                  <span className="text-xs text-muted">{l.hint}</span>
                 </span>
               </label>
             ))}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../ipc/api";
 import type { PendingApproval } from "../ipc/generated/PendingApproval";
-import { Button, Icon } from "../components/ui";
+import { Button } from "../components/ui";
 import { shortDir } from "../lib/display";
 
 /** The small window that asks before an agent runs a destructive tool. */
@@ -25,10 +25,14 @@ export function ApprovalView({ id }: { id: number }) {
   return (
     <div className="flex h-full flex-col bg-panel p-5">
       <div className="flex items-center gap-2">
-        <Icon name="warning" className="size-5 text-warn" />
+        {/* The website's approval signal: a glowing red dot, since only destructive tools ask. */}
+        <span
+          aria-hidden="true"
+          className="size-2 shrink-0 rounded-full bg-danger shadow-[0_0_10px_var(--danger)]"
+        />
         <h1 className="text-[15px] font-semibold">An agent wants to make a change</h1>
       </div>
-      <dl className="mt-4 grid grid-cols-[80px_1fr] gap-x-3 gap-y-1.5">
+      <dl className="mt-4 grid grid-cols-[80px_1fr] gap-x-3 gap-y-1.5 rounded-lg bg-sunken px-3.5 py-3">
         <dt className="text-muted">Agent</dt>
         <dd className="font-medium">{req.client}</dd>
         <dt className="text-muted">Action</dt>
