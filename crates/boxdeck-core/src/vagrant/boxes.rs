@@ -205,12 +205,11 @@ fn parse_outdated_line(msg: &str) -> Option<BoxUpdate> {
         }
     } else if rest.starts_with(" wasn't added from a catalog") {
         UpdateStatus::NoMetadata
-    } else if let Some(r) = rest.strip_prefix(": Error loading metadata: ") {
+    } else {
+        let r = rest.strip_prefix(": Error loading metadata: ")?;
         UpdateStatus::Error {
             message: r.to_owned(),
         }
-    } else {
-        return None;
     };
     Some(BoxUpdate {
         name: name.to_owned(),
