@@ -4,7 +4,7 @@ import { isActive, prefetch } from "../hooks";
 import { api } from "../ipc/api";
 import type { LogLine } from "../ipc/generated/LogLine";
 import { colorizeLine } from "../lib/vagrantLog";
-import { onJobLine, useUi, type DockTab } from "../state/store";
+import { DOCK_DEFAULT, onJobLine, useUi, type DockTab } from "../state/store";
 import { Button, ConfirmDialog, Icon, IconButton, cn } from "../components/ui";
 
 // xterm is only needed once a log or terminal tab opens, so it loads off the startup path.
@@ -21,7 +21,7 @@ function TerminalView(props: ComponentProps<typeof LazyTerminal>) {
 }
 
 export function Dock() {
-  const { tabs, activeTab, setActiveTab, closeTab, dockOpen, setDockOpen } = useUi(
+  const { tabs, activeTab, setActiveTab, closeTab, dockOpen, setDockOpen, dockSize } = useUi(
     useShallow((s) => ({
       tabs: s.tabs,
       activeTab: s.activeTab,
@@ -29,6 +29,7 @@ export function Dock() {
       closeTab: s.closeTab,
       dockOpen: s.dockOpen,
       setDockOpen: s.setDockOpen,
+      dockSize: s.dockSize,
     })),
   );
   // Only the tab titles, so job state changes don't re-render the dock.
@@ -45,10 +46,12 @@ export function Dock() {
     <section
       aria-label="Logs and terminals"
       className={cn(
-        "anim-rise flex flex-col border-t border-border bg-panel",
-        dockOpen ? "h-[38%] min-h-48" : "h-8",
+        "anim-rise relative flex flex-col border-t border-border bg-panel",
+        dockOpen ? "min-h-32" : "h-8",
       )}
+      style={dockOpen ? { height: `${dockSize * 100}%` } : undefined}
     >
+      {dockOpen && <ResizeHandle size={dockSize} />}
       <div role="tablist" className="flex h-8 shrink-0 items-center gap-0.5 overflow-x-auto px-1">
         {tabs.map((t, i) => (
           <div
@@ -106,6 +109,60 @@ export function Dock() {
         ))}
       </div>
     </section>
+  );
+}
+
+/** The dock's top edge: drag to resize, arrow keys when focused, double-click to reset. */
+function ResizeHandle({ size }: { size: number }) {
+  const setDockSize = useUi((s) => s.setDockSize);
+  const [dragging, setDragging] = useState(false);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // The dock's parent is the content column it shares with the main view.
+    const column = e.currentTarget.parentElement?.parentElement;
+    if (!column || e.button !== 0) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDragging(true);
+    const rect = column.getBoundingClientRect();
+    const move = (ev: PointerEvent) => setDockSize((rect.bottom - ev.clientY) / rect.height);
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+
+  return (
+    <div
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Resize panel"
+      aria-valuemin={15}
+      aria-valuemax={85}
+      aria-valuenow={Math.round(size * 100)}
+      tabIndex={0}
+      onPointerDown={onPointerDown}
+      onDoubleClick={() => setDockSize(DOCK_DEFAULT)}
+      onKeyDown={(e) => {
+        if (e.key === "ArrowUp") setDockSize(size + 0.05);
+        else if (e.key === "ArrowDown") setDockSize(size - 0.05);
+        else return;
+        e.preventDefault();
+      }}
+      className="group absolute inset-x-0 -top-1 z-10 h-2 cursor-row-resize outline-none"
+    >
+      <span
+        className={cn(
+          "absolute inset-x-0 top-1/2 h-0.5 -translate-y-1/2 transition-colors",
+          dragging
+            ? "bg-accent-solid"
+            : "group-hover:bg-accent-solid/60 group-focus-visible:bg-accent-solid",
+        )}
+      />
+    </div>
   );
 }
 

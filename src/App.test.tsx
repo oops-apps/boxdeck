@@ -39,6 +39,7 @@ beforeEach(() => {
     settingsTab: "general",
     settingsProject: null,
     updateCheck: "idle",
+    dockSize: 0.38,
   });
 });
 
@@ -79,6 +80,19 @@ describe("Machines", () => {
     expect(within(table).getByText("up db")).toBeInTheDocument();
     expect(within(table).getByText("Succeeded")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "up db" })).toBeInTheDocument();
+  });
+
+  it("resizes the log panel from its top edge", async () => {
+    renderApp();
+    await screen.findByText("db");
+    fireEvent.click(within(row("db")).getByRole("button", { name: /Up/ }));
+    const handle = await screen.findByRole("separator", { name: "Resize panel" });
+    expect(handle).toHaveAttribute("aria-valuenow", "38");
+    fireEvent.keyDown(handle, { key: "ArrowUp" });
+    fireEvent.keyDown(handle, { key: "ArrowUp" });
+    expect(handle).toHaveAttribute("aria-valuenow", "48");
+    fireEvent.doubleClick(handle);
+    expect(handle).toHaveAttribute("aria-valuenow", "38");
   });
 
   it("asks before destroying", async () => {

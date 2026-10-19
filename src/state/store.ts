@@ -49,6 +49,9 @@ interface UiState {
 
   dockOpen: boolean;
   setDockOpen: (open: boolean) => void;
+  /** Open dock height as a share of the window's content column. */
+  dockSize: number;
+  setDockSize: (size: number) => void;
   tabs: DockTab[];
   activeTab: string | null;
   openTab: (tab: DockTab) => void;
@@ -57,6 +60,20 @@ interface UiState {
 }
 
 export const machineKey = (dir: string, name: string) => `${dir}\u0000${name}`;
+
+export const DOCK_DEFAULT = 0.38;
+const DOCK_KEY = "boxdeck.dockSize";
+export const clampDock = (size: number) => Math.min(0.85, Math.max(0.15, size));
+
+// A per-window convenience, so browser storage is enough; it may be unavailable.
+function savedDockSize(): number {
+  try {
+    const v = Number(localStorage.getItem(DOCK_KEY));
+    return v > 0 ? clampDock(v) : DOCK_DEFAULT;
+  } catch {
+    return DOCK_DEFAULT;
+  }
+}
 
 export const useUi = create<UiState>((set) => ({
   view: "machines",
@@ -93,6 +110,16 @@ export const useUi = create<UiState>((set) => ({
 
   dockOpen: false,
   setDockOpen: (dockOpen) => set({ dockOpen }),
+  dockSize: savedDockSize(),
+  setDockSize: (size) => {
+    const dockSize = clampDock(size);
+    try {
+      localStorage.setItem(DOCK_KEY, String(dockSize));
+    } catch {
+      // Not saved; the size still applies for this session.
+    }
+    set({ dockSize });
+  },
   tabs: [],
   activeTab: null,
   openTab: (tab) =>
