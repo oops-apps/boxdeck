@@ -11,13 +11,13 @@ Fill these in before M0; they are fixed after.
 - GitHub owner: `oops-apps` → bundle id `io.github.oops-apps.boxdeck`
 - Minimum Vagrant: 2.3 (feature-detect 2.4 for `box-architecture`)
 - Priority providers for QA: `vmware_desktop` (VMware Fusion on macOS)
-- Current milestone: **v0.1.0 release (needs maintainer)** (update this line when a milestone is merged)
+- Current milestone: **M6c agent shell access (merge, then release 0.1.0-beta.5)** (update this line when a milestone is merged)
 
 ## Where things are
 
 - `crates/boxdeck-core/`: all Vagrant logic, jobs, config, MCP policy, audit. **No Tauri dependency, ever.** The headless `boxdeck-mcp` binary links it.
 - `crates/boxdeck-mcp/`: `rmcp` tool router (lib) plus the stdio server (bin).
-- `src-tauri/`: the Tauri app: IPC commands, tray, in-app MCP HTTP endpoint, approval dialogs. Keep it thin; logic belongs in core.
+- `src-tauri/`: the Tauri app: IPC commands, tray, MCP approval windows and client Connect. Keep it thin; logic belongs in core.
 - `src/`: React UI. Types in `src/ipc/generated/` come from `ts-rs`; never edit them by hand.
 - `tests/fake-vagrant/`: scriptable fake `vagrant` (a Rust bin crate in the workspace) used by integration and e2e tests.
 - `scripts/`: `capture-fixtures` (records real Vagrant output), `build-sidecar` (builds `boxdeck-mcp` into `src-tauri/binaries/`) and `export-tray-icons.sh` (macOS menu-bar PNGs from `src-tauri/icons/tray/*.svg`).
@@ -56,7 +56,7 @@ Keep this list in sync with `package.json` and the `Makefile` (`make help` lists
 - **Validation:** every IPC command and every MCP tool validates input with the shared validators in core: known project dirs, known machine names, allowlisted box names and flags.
 - **Tray:** every tray action must be reachable from the menu. Linux emits no tray click events.
 - **Streaming:** use `tauri::ipc::Channel` for job output to the UI. Use events only for low-rate "changed" notifications.
-- **Logging:** never log or return SSH private-key contents or MCP client tokens.
+- **Logging:** never log or return SSH private-key contents.
 - **PATH:** call `fix_path_env::fix()` first in `main()` of both the app and `boxdeck-mcp`.
 
 ## Testing and verification

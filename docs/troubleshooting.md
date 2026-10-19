@@ -56,4 +56,4 @@ SmartScreen warns about new unsigned apps. Choose **More info → Run anyway**.
 
 ## Agents can't connect
 
-Check **Settings → MCP / Agents**: agent access must be on, the status line should say "Listening on …", and the client must send its own token. If the port is taken, Boxdeck says so instead of picking another one; choose a free port and update your client.
+Check **Settings → MCP / Agents**: agent access must be on, and the client's row under **Connect a client** should say **Connected**. Restart the client after connecting. If the row says **Points to an old copy of Boxdeck** (you moved or reinstalled the app), click **Reconnect**. If an agent says a call needs approval, open the Boxdeck app: approvals only work while it's running.

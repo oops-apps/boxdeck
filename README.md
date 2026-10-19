@@ -17,7 +17,7 @@ Boxdeck is not affiliated with or endorsed by HashiCorp. It runs the `vagrant` y
 - **Projects your way**: names, groups, color tags, pinning and hiding; per-project environment variables and `vagrant up` defaults.
 - **Vagrantfile editor**: Ruby highlighting, a backup on every save, conflict detection, and `vagrant validate` built in.
 - **Self-updating**: checks GitHub Releases for a new version and installs a signed update from inside the app (Linux: AppImage, `.deb` and `.rpm`).
-- **AI agents (MCP)**: off by default. Read, Operate or Full access, per-project rules, a token per client, approval for destructive actions, a pause switch and an audit log. See [docs/mcp.md](docs/mcp.md).
+- **AI agents (MCP)**: off by default. One-click Connect for Claude Code, Claude Desktop, Cursor, Gemini CLI and Codex, no tokens. Read, Operate or Full access, optional shell access inside VMs (commands, file copies, long builds as jobs), per-project rules, approval for destructive actions, a pause switch and an audit log. See [docs/mcp.md](docs/mcp.md).
 
 Works with any Vagrant provider; tested with VMware Desktop (VMware Fusion) and Docker. Needs Vagrant 2.3 or newer.
 
