@@ -10,6 +10,7 @@ import {
 } from "../hooks";
 import { api } from "../ipc/api";
 import type { AgentAccess } from "../ipc/generated/AgentAccess";
+import type { ShellMode } from "../ipc/generated/ShellMode";
 import type { ProjectSettings } from "../ipc/generated/ProjectSettings";
 import type { Settings } from "../ipc/generated/Settings";
 import { useUi, type SettingsTab } from "../state/store";
@@ -605,6 +606,24 @@ function ProjectsSection({
                   <option value="inherit">Use the MCP setting</option>
                   <option value="allow">Allow</option>
                   <option value="deny">Deny (agents can't see it)</option>
+                </select>
+                <label htmlFor={`shell-${dir}`}>Agent shell access</label>
+                <select
+                  id={`shell-${dir}`}
+                  value={p.shell ?? ""}
+                  onChange={(e) =>
+                    update(
+                      (x) =>
+                        void (x.shell =
+                          e.target.value === "" ? null : (e.target.value as ShellMode)),
+                    )
+                  }
+                  className={cn(field, "w-56")}
+                >
+                  <option value="">Use the MCP setting</option>
+                  <option value="off">Off</option>
+                  <option value="ask_once">Ask once per VM</option>
+                  <option value="always">Always allow</option>
                 </select>
                 <span className="self-start pt-1">Environment</span>
                 <KeyValueEditor

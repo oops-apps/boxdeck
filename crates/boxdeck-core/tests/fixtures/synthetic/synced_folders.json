@@ -1,0 +1,1 @@
+{"virtualbox":{"/vagrant":{"guestpath":"/vagrant","hostpath":"/Users/dev/proj","disabled":false,"__vagrantfile":true}},"rsync":{"/srv/app":{"guestpath":"/srv/app","hostpath":"/Users/dev/proj/app","disabled":false,"type":"rsync"}},"nfs":{"/data":{"guestpath":"/data","hostpath":"/Users/dev/data","disabled":true,"type":"nfs"}}}

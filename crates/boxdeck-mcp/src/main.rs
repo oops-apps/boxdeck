@@ -5,9 +5,9 @@ use std::process::ExitCode;
 use std::sync::{Arc, RwLock};
 
 use boxdeck_core::audit::AuditLog;
+use boxdeck_core::bridge::Bridge;
 use boxdeck_core::config::{self, Settings, SettingsStore};
 use boxdeck_core::jobs::{Jobs, JobsConfig};
-use boxdeck_core::policy::Transport;
 use boxdeck_core::vagrant::index;
 use boxdeck_core::vagrant::locate::{self, Vagrant};
 use boxdeck_core::vagrant::status::StatusService;
@@ -16,9 +16,9 @@ use rmcp::ServiceExt;
 
 const HELP: &str = "boxdeck-mcp: Boxdeck's MCP server over stdio.
 
-Point your MCP client at this program. It uses the settings from the Boxdeck app (turn agent
-access on in Settings -> MCP); destructive tools stay off here unless you allow them for
-headless mode, because there is no window to approve them in.
+Point your MCP client at this program, or use Connect in Boxdeck's Settings -> MCP. It uses
+the Boxdeck app's settings (turn agent access on there). Calls that need your approval are
+shown in the app while it's running; without it they are refused unless you allowed them.
 
 Options:
   --version   print the version
@@ -110,11 +110,11 @@ async fn serve() -> Result<(), String> {
         settings: Arc::new(move || reader.read().unwrap_or_else(|e| e.into_inner()).clone()),
         index_path: home.as_ref().map(|h| index::index_path(h)),
         vagrant_home: home,
-        transport: Transport::Stdio,
         audit: AuditLog::default_log().ok(),
-        approve: None,
+        approvals: Bridge::default_bridge()
+            .ok()
+            .map(|b| Arc::new(b) as Arc<dyn boxdeck_mcp::Approver>),
         on_job_done: None,
-        client_from: None,
     };
     let service = BoxdeckServer::new(Arc::new(ctx))
         .serve(rmcp::transport::stdio())

@@ -16,15 +16,7 @@ use crate::state::AppState;
 
 #[tauri::command]
 pub fn get_settings(state: State<'_, AppState>) -> Settings {
-    redact(state.settings())
-}
-
-/// Settings as the UI sees them: MCP tokens blanked (fetched one at a time for Copy).
-fn redact(mut s: Settings) -> Settings {
-    for c in &mut s.mcp.clients {
-        c.token.clear();
-    }
-    s
+    state.settings()
 }
 
 /// Validates, saves and applies settings. Launch-at-login is synced with the OS here.
@@ -40,18 +32,12 @@ pub async fn save_settings(app: AppHandle, settings: Settings) -> CmdResult<Sett
         };
         result.map_err(|e| format!("could not change launch at login: {e}"))?;
     }
-    // Clients are managed through their own commands; the UI's copy has no tokens.
-    let (saved, path_changed) = state.update_settings(|s| {
-        let clients = std::mem::take(&mut s.mcp.clients);
-        *s = settings;
-        s.mcp.clients = clients;
-    })?;
+    let (saved, path_changed) = state.update_settings(|s| *s = settings)?;
     if path_changed {
         redetect(&app).await;
     }
-    crate::mcp_http::reconcile(&app).await;
     commands::machines_changed(&app);
-    Ok(redact(saved))
+    Ok(saved)
 }
 
 /// Looks for Vagrant again, e.g. after the user installed it.
@@ -214,8 +200,7 @@ async fn validate(state: &AppState, project_dir: &Path) -> CmdResult<ValidateRes
     })
 }
 
-/// Writes the settings to a JSON file the user picks. Secrets never leave: MCP client
-/// tokens (M6) are stripped first.
+/// Writes the settings to a JSON file the user picks.
 #[tauri::command]
 pub async fn export_settings(app: AppHandle) -> CmdResult<Option<String>> {
     let Some(path) = pick(
@@ -228,17 +213,11 @@ pub async fn export_settings(app: AppHandle) -> CmdResult<Option<String>> {
     else {
         return Ok(None);
     };
-    let settings = exportable(app.state::<AppState>().settings());
+    let settings = app.state::<AppState>().settings();
     SettingsStore::new(&path)
         .save(&settings)
         .map_err(|e| e.to_string())?;
     Ok(Some(path.to_string_lossy().into_owned()))
-}
-
-/// What leaves the machine on export: everything but MCP client tokens.
-pub fn exportable(mut settings: Settings) -> Settings {
-    settings.mcp.clients.clear();
-    settings
 }
 
 /// Reads settings from a JSON file the user picks. They're migrated and validated, but not
@@ -248,29 +227,9 @@ pub async fn import_settings(app: AppHandle) -> CmdResult<Option<Settings>> {
     let Some(path) = pick(&app, "Import Boxdeck settings", false, None).await else {
         return Ok(None);
     };
-    let mut imported = SettingsStore::new(&path)
+    let imported = SettingsStore::new(&path)
         .load()
         .map_err(|e| e.to_string())?;
     imported.validate().map_err(|e| e.to_string())?;
-    // Tokens are never exported, so keep this computer's clients connected.
-    imported.mcp.clients = app.state::<AppState>().settings().mcp.clients;
     Ok(Some(imported))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use boxdeck_core::config::McpClient;
-
-    #[test]
-    fn export_never_includes_client_tokens() {
-        let mut s = Settings::default();
-        s.mcp.clients.push(McpClient {
-            name: "Claude Code".into(),
-            token: "secret".into(),
-            created_at: 0,
-        });
-        let out = serde_json::to_string(&exportable(s)).unwrap();
-        assert!(!out.contains("secret"));
-    }
 }

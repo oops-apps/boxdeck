@@ -1,7 +1,6 @@
 mod approvals;
 mod commands;
 mod mcp_cmds;
-mod mcp_http;
 mod settings_cmds;
 mod state;
 mod tray;
@@ -65,11 +64,11 @@ pub fn run() {
             settings_cmds::export_settings,
             settings_cmds::import_settings,
             settings_cmds::redetect_vagrant,
-            mcp_cmds::mcp_status,
-            mcp_cmds::mcp_add_client,
-            mcp_cmds::mcp_rotate_client,
-            mcp_cmds::mcp_remove_client,
-            mcp_cmds::mcp_client_token,
+            mcp_cmds::mcp_clients,
+            mcp_cmds::mcp_connect,
+            mcp_cmds::mcp_disconnect,
+            mcp_cmds::mcp_grants,
+            mcp_cmds::mcp_revoke_grant,
             mcp_cmds::list_audit,
             approvals::get_approval,
             approvals::answer_approval,
@@ -81,9 +80,8 @@ pub fn run() {
             // Closing an approval window without answering counts as "no".
             if let WindowEvent::Destroyed = event
                 && let Some(id) = window.label().strip_prefix("approval-")
-                && let Ok(id) = id.parse()
             {
-                approvals::answer_approval(id, false);
+                approvals::dismissed(window.app_handle(), id);
             }
             if let WindowEvent::CloseRequested { api, .. } = event {
                 let keep = window.state::<AppState>().settings().app.keep_in_tray;
@@ -107,6 +105,7 @@ pub fn run() {
             }
             commands::watch_index(&handle);
             commands::watch_audit(&handle);
+            approvals::start(&handle);
             notify_finished_jobs(&handle);
             // Dev builds would only ever find the published release.
             if settings.app.check_updates_on_launch && !cfg!(debug_assertions) {

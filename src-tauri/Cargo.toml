@@ -17,11 +17,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { workspace = true }
 
 [dependencies]
-axum = { workspace = true }
 boxdeck-core = { workspace = true }
-boxdeck-mcp = { workspace = true }
-rand = { workspace = true }
-rmcp = { workspace = true, features = ["transport-streamable-http-server"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tauri = { workspace = true }

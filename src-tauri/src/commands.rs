@@ -576,7 +576,6 @@ pub async fn startup(app: AppHandle) {
         .map_err(|e| e.to_string());
     state.set_vagrant(result);
     machines_changed(&app);
-    crate::mcp_http::reconcile(&app).await;
     if let Ok(log) = boxdeck_core::audit::AuditLog::default_log() {
         let _ = log.rotate_if_needed(state.settings().mcp.audit_max_bytes);
     }

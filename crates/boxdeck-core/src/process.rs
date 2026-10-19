@@ -100,13 +100,22 @@ pub fn wrap(spec: &CommandSpec) -> CommandWrap {
 /// Runs a short command to completion and collects its output.
 /// On timeout the future is dropped, and `KillOnDrop` takes the whole process tree down.
 pub async fn run(spec: &CommandSpec, timeout: Duration) -> Result<CommandOutput> {
+    let (exit_code, stdout, stderr) = run_raw(spec, timeout).await?;
+    Ok(CommandOutput {
+        exit_code,
+        stdout: String::from_utf8_lossy(&stdout).into_owned(),
+        stderr: String::from_utf8_lossy(&stderr).into_owned(),
+    })
+}
+
+/// Like [`run`], with stdout and stderr as bytes (file downloads).
+pub async fn run_raw(
+    spec: &CommandSpec,
+    timeout: Duration,
+) -> Result<(Option<i32>, Vec<u8>, Vec<u8>)> {
     let child = wrap(spec).spawn()?;
     let output = tokio::time::timeout(timeout, Box::into_pin(child.wait_with_output()))
         .await
         .map_err(|_| Error::Timeout(timeout.as_secs()))??;
-    Ok(CommandOutput {
-        exit_code: output.status.code(),
-        stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
-        stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
-    })
+    Ok((output.status.code(), output.stdout, output.stderr))
 }

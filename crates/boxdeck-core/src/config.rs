@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::error::{Error, Result};
 
 /// Current settings schema version. Bump it and add a step to [`migrate`] when the shape changes.
-pub const SETTINGS_VERSION: u32 = 1;
+pub const SETTINGS_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(default)]
@@ -41,17 +41,15 @@ pub struct McpSettings {
     pub access: AccessLevel,
     /// Kill switch: every call is refused while set. Shared with `boxdeck-mcp` via this file.
     pub paused: bool,
-    /// Headless (stdio) mode can't ask for approval, so destructive tools are refused there
+    /// Without the app running nobody can approve, so destructive tools are refused then
     /// unless this is on.
     pub headless_destructive: bool,
-    /// `ssh_exec` runs arbitrary commands in a VM, so it needs its own opt-in.
-    pub ssh_exec: bool,
+    /// Shell tools (`ssh_exec`, `vm_upload`, `vm_download`): commands inside VMs.
+    pub shell: ShellMode,
+    /// Lets shell calls that would ask for approval through while the app isn't running.
+    pub shell_headless: bool,
     /// Projects without an explicit allow/deny follow this.
     pub default_access: DefaultProjectAccess,
-    /// Port of the in-app HTTP endpoint (M6b).
-    pub port: u16,
-    /// Named bearer tokens, one per client (M6b). Never exported.
-    pub clients: Vec<McpClient>,
     /// The audit log rotates when it grows past this.
     #[ts(type = "number")]
     pub audit_max_bytes: u64,
@@ -64,10 +62,9 @@ impl Default for McpSettings {
             access: AccessLevel::Read,
             paused: false,
             headless_destructive: false,
-            ssh_exec: false,
+            shell: ShellMode::Off,
+            shell_headless: false,
             default_access: DefaultProjectAccess::AllProjects,
-            port: 47_816,
-            clients: Vec::new(),
             audit_max_bytes: 5_000_000,
         }
     }
@@ -98,13 +95,16 @@ pub enum DefaultProjectAccess {
     OnlyAllowed,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+/// How agents may work inside VMs (plan §4.8).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
+#[serde(rename_all = "snake_case")]
 #[ts(export)]
-pub struct McpClient {
-    pub name: String,
-    pub token: String,
-    #[ts(type = "number")]
-    pub created_at: u64,
+pub enum ShellMode {
+    #[default]
+    Off,
+    /// Asks once per machine whose synced folders can write to the host.
+    AskOnce,
+    Always,
 }
 
 /// Colour tags the UI knows how to draw.
@@ -126,6 +126,8 @@ pub struct ProjectSettings {
     pub up: UpDefaults,
     /// Whether agents (MCP) may see and act on this project.
     pub agent_access: AgentAccess,
+    /// Overrides the global shell mode; `None` inherits it.
+    pub shell: Option<ShellMode>,
     pub machines: BTreeMap<String, MachineSettings>,
 }
 
@@ -276,12 +278,6 @@ impl Settings {
             return Err(Error::invalid("concurrent jobs", "must be 1 to 16"));
         }
         env_names(&self.env)?;
-        if self.mcp.port < 1024 {
-            return Err(Error::invalid("MCP port", "must be 1024 or higher"));
-        }
-        for c in &self.mcp.clients {
-            label("MCP client name", &Some(c.name.clone()))?;
-        }
         for b in &self.bookmarks {
             if !b.is_absolute() {
                 return Err(Error::invalid("bookmark", "must be an absolute path"));
@@ -376,9 +372,22 @@ impl Settings {
     }
 }
 
-/// Upgrades raw settings JSON from version `_from` to [`SETTINGS_VERSION`], one version at a
-/// time. Version 1 is the first, so there are no steps yet.
-pub fn migrate(value: serde_json::Value, _from: u32) -> serde_json::Value {
+/// Upgrades raw settings JSON from version `from` to [`SETTINGS_VERSION`], one version at a
+/// time.
+pub fn migrate(mut value: serde_json::Value, from: u32) -> serde_json::Value {
+    if from < 2
+        && let Some(mcp) = value
+            .get_mut("mcp")
+            .and_then(serde_json::Value::as_object_mut)
+    {
+        // v2 dropped the HTTP endpoint (port, tokens) and replaced the ssh_exec switch. Its
+        // per-call approval no longer exists; ask-once is the closest mode.
+        mcp.remove("port");
+        mcp.remove("clients");
+        if mcp.remove("ssh_exec") == Some(serde_json::Value::Bool(true)) {
+            mcp.insert("shell".into(), "ask_once".into());
+        }
+    }
     value
 }
 
@@ -600,6 +609,33 @@ mod tests {
         let s = SettingsStore::new(&path).load().unwrap();
         assert_eq!(s.status.concurrency, 5);
         assert_eq!(s.jobs.global_cap, 3);
+    }
+
+    #[test]
+    fn v1_mcp_settings_migrate() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("settings.json");
+        let v1 = |ssh: bool| {
+            format!(
+                r#"{{"version":1,"mcp":{{"enabled":true,"port":5000,"ssh_exec":{ssh},
+                "clients":[{{"name":"a","token":"t","created_at":1}}]}}}}"#
+            )
+        };
+        std::fs::write(&path, v1(true)).unwrap();
+        let s = SettingsStore::new(&path).load().unwrap();
+        assert_eq!(s.version, 2);
+        assert!(s.mcp.enabled);
+        assert_eq!(s.mcp.shell, ShellMode::AskOnce);
+        assert!(!s.mcp.shell_headless);
+        SettingsStore::new(&path).save(&s).unwrap();
+        let saved = std::fs::read_to_string(&path).unwrap();
+        assert!(!saved.contains("token") && !saved.contains("port"));
+
+        std::fs::write(&path, v1(false)).unwrap();
+        assert_eq!(
+            SettingsStore::new(&path).load().unwrap().mcp.shell,
+            ShellMode::Off
+        );
     }
 
     #[test]

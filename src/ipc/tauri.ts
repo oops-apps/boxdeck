@@ -74,11 +74,11 @@ export const tauriApi: Api = {
   exportSettings: () => invoke("export_settings"),
   importSettings: () => invoke("import_settings"),
   redetectVagrant: () => invoke("redetect_vagrant"),
-  mcpStatus: () => invoke("mcp_status"),
-  mcpAddClient: (name) => invoke("mcp_add_client", { name }),
-  mcpRotateClient: (name) => invoke("mcp_rotate_client", { name }),
-  mcpRemoveClient: (name) => invoke("mcp_remove_client", { name }),
-  mcpClientToken: (name) => invoke("mcp_client_token", { name }),
+  mcpClients: () => invoke("mcp_clients"),
+  mcpConnect: (kind) => invoke("mcp_connect", { kind }),
+  mcpDisconnect: (kind) => invoke("mcp_disconnect", { kind }),
+  mcpGrants: () => invoke("mcp_grants"),
+  mcpRevokeGrant: (project, machine) => invoke("mcp_revoke_grant", { project, machine }),
   listAudit: (limit) => invoke("list_audit", { limit: limit ?? null }),
   onAuditChanged(cb) {
     const un = listen("audit-changed", () => cb());
@@ -87,7 +87,8 @@ export const tauriApi: Api = {
     };
   },
   getApproval: (id) => invoke("get_approval", { id }),
-  answerApproval: (id, allow) => invoke("answer_approval", { id, allow }),
+  answerApproval: (id, allow, session) =>
+    invoke("answer_approval", { id, allow, session: session ?? null }),
   pendingAppUpdate: () => invoke("pending_app_update"),
   checkAppUpdate: () => invoke("check_app_update"),
   installAppUpdate(onProgress) {

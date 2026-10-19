@@ -1,77 +1,91 @@
-//! Settings → MCP: endpoint status, client tokens and the agent audit log.
+//! Settings → MCP: Connect/Disconnect for MCP clients, session grants and the audit log.
+
+use std::path::{Path, PathBuf};
 
 use boxdeck_core::audit::{AuditEntry, AuditLog};
-use boxdeck_core::config::McpClient;
-use tauri::{AppHandle, Manager};
+use boxdeck_core::bridge::{Bridge, Grant};
+use boxdeck_core::clients::{self, ClientKind, ClientStatus, Homes};
+use serde::Serialize;
 
 use crate::commands::CmdResult;
-use crate::mcp_http::{self, McpStatus};
-use crate::state::AppState;
 
-#[tauri::command]
-pub fn mcp_status(app: AppHandle) -> McpStatus {
-    mcp_http::status(&app)
+/// The bundled `boxdeck-mcp`, next to the app's own binary.
+fn bundled_server() -> PathBuf {
+    let name = format!("boxdeck-mcp{}", std::env::consts::EXE_SUFFIX);
+    std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|d| d.join(&name)))
+        .unwrap_or_else(|| PathBuf::from(name))
 }
 
-/// A random 256-bit token, hex-encoded.
-fn new_token() -> String {
-    rand::random::<[u8; 32]>()
-        .iter()
-        .map(|b| format!("{b:02x}"))
-        .collect()
+/// The path clients should launch. An AppImage is mounted somewhere new on every launch, so it
+/// registers a copy in the data dir instead.
+fn server_path() -> PathBuf {
+    let bundled = bundled_server();
+    if std::env::var_os("APPIMAGE").is_none() {
+        return bundled;
+    }
+    boxdeck_core::config::data_dir()
+        .and_then(|d| clients::stable_copy(&bundled, &d.join("bin"), boxdeck_core::VERSION))
+        .unwrap_or_else(|e| {
+            tracing::warn!("could not copy boxdeck-mcp out of the AppImage: {e}");
+            bundled
+        })
 }
 
-/// Adds a named client and returns its token (shown so the user can copy it).
-#[tauri::command]
-pub fn mcp_add_client(app: AppHandle, name: String) -> CmdResult<String> {
-    let name = name.trim().to_owned();
-    let token = new_token();
-    app.state::<AppState>().update_settings(|s| {
-        if !s.mcp.clients.iter().any(|c| c.name == name) {
-            s.mcp.clients.push(McpClient {
-                name: name.clone(),
-                token: token.clone(),
-                created_at: boxdeck_core::jobs::now_ms(),
-            });
-        }
-    })?;
-    mcp_client_token(app, name)
+#[derive(Debug, Serialize, ts_rs::TS)]
+#[ts(export)]
+pub struct McpClients {
+    /// What Connect registers; also shown for clients that aren't listed.
+    pub server_path: String,
+    pub clients: Vec<ClientStatus>,
 }
 
-/// Replaces a client's token; the old one stops working at once.
-#[tauri::command]
-pub fn mcp_rotate_client(app: AppHandle, name: String) -> CmdResult<String> {
-    let token = new_token();
-    app.state::<AppState>().update_settings(|s| {
-        if let Some(c) = s.mcp.clients.iter_mut().find(|c| c.name == name) {
-            c.token = token.clone();
-            c.created_at = boxdeck_core::jobs::now_ms();
-        }
-    })?;
-    Ok(token)
+fn homes() -> CmdResult<Homes> {
+    Homes::detect().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn mcp_remove_client(app: AppHandle, name: String) -> CmdResult<()> {
-    app.state::<AppState>()
-        .update_settings(|s| s.mcp.clients.retain(|c| c.name != name))?;
-    Ok(())
+pub fn mcp_clients() -> CmdResult<McpClients> {
+    let server = server_path();
+    Ok(McpClients {
+        server_path: server.to_string_lossy().into_owned(),
+        clients: clients::list(&homes()?, &server),
+    })
 }
 
-/// The token, for the Copy button. Settings sent to the UI otherwise have tokens blanked.
 #[tauri::command]
-pub fn mcp_client_token(app: AppHandle, name: String) -> CmdResult<String> {
-    app.state::<AppState>()
-        .settings()
-        .mcp
-        .clients
-        .into_iter()
-        .find(|c| c.name == name)
-        .map(|c| c.token)
-        .ok_or_else(|| format!("no client named {name:?}"))
+pub fn mcp_connect(kind: ClientKind) -> CmdResult<McpClients> {
+    clients::connect(&homes()?, kind, &server_path()).map_err(|e| e.to_string())?;
+    mcp_clients()
 }
 
-/// Recent agent calls from both the app and `boxdeck-mcp`, newest first.
+#[tauri::command]
+pub fn mcp_disconnect(kind: ClientKind) -> CmdResult<McpClients> {
+    clients::disconnect(&homes()?, kind).map_err(|e| e.to_string())?;
+    mcp_clients()
+}
+
+fn bridge() -> CmdResult<Bridge> {
+    Bridge::default_bridge().map_err(|e| e.to_string())
+}
+
+/// Machines the user allowed shell access to for this session.
+#[tauri::command]
+pub fn mcp_grants() -> CmdResult<Vec<Grant>> {
+    Ok(bridge()?.grants())
+}
+
+#[tauri::command]
+pub fn mcp_revoke_grant(project: String, machine: String) -> CmdResult<Vec<Grant>> {
+    let bridge = bridge()?;
+    bridge
+        .revoke(Path::new(&project), &machine)
+        .map_err(|e| e.to_string())?;
+    Ok(bridge.grants())
+}
+
+/// Recent agent calls, newest first.
 #[tauri::command]
 pub fn list_audit(limit: Option<usize>) -> CmdResult<Vec<AuditEntry>> {
     let log = AuditLog::default_log().map_err(|e| e.to_string())?;
@@ -80,17 +94,4 @@ pub fn list_audit(limit: Option<usize>) -> CmdResult<Vec<AuditEntry>> {
         .map_err(|e| e.to_string())?;
     entries.reverse();
     Ok(entries)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn tokens_are_long_and_unique() {
-        let a = new_token();
-        assert_eq!(a.len(), 64);
-        assert!(a.chars().all(|c| c.is_ascii_hexdigit()));
-        assert_ne!(a, new_token());
-    }
 }

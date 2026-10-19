@@ -5,6 +5,9 @@ import type { Action } from "./generated/Action";
 import type { AppUpdate } from "./generated/AppUpdate";
 import type { AuditEntry } from "./generated/AuditEntry";
 import type { BoxInfo } from "./generated/BoxInfo";
+import type { ClientKind } from "./generated/ClientKind";
+import type { Grant } from "./generated/Grant";
+import type { McpClients } from "./generated/McpClients";
 import type { PopularBox } from "./generated/PopularBox";
 import type { JobEvent } from "./generated/JobEvent";
 import type { JobInfo } from "./generated/JobInfo";
@@ -117,10 +120,9 @@ export function defaultSettings(): Settings {
       access: "read",
       paused: false,
       headless_destructive: false,
-      ssh_exec: false,
+      shell: "off",
+      shell_headless: false,
       default_access: "all_projects",
-      port: 47816,
-      clients: [],
       audit_max_bytes: 5_000_000,
     },
     projects: {
@@ -133,6 +135,7 @@ export function defaultSettings(): Settings {
         env: {},
         up: { provider: "vmware_desktop", provision: null },
         agent_access: "inherit",
+        shell: null,
         machines: {},
       },
     },
@@ -203,12 +206,45 @@ export function createMockApi(opts: { stepMs?: number; vagrantMissing?: boolean 
   let settings = defaultSettings();
   let pendingUpdate: AppUpdate | null = null;
   const files = new Map<string, string>();
-  const tokens = new Map<string, string>();
+  const server = "/Applications/Boxdeck.app/Contents/MacOS/boxdeck-mcp";
+  const clientDefs: [ClientKind, string, string, boolean][] = [
+    ["claude_code", "Claude Code", "/Users/dev/.claude.json", true],
+    [
+      "claude_desktop",
+      "Claude Desktop",
+      "/Users/dev/Library/Application Support/Claude/claude_desktop_config.json",
+      true,
+    ],
+    ["cursor", "Cursor", "/Users/dev/.cursor/mcp.json", true],
+    ["gemini_cli", "Gemini CLI", "/Users/dev/.gemini/settings.json", false],
+    ["codex", "Codex", "/Users/dev/.codex/config.toml", true],
+  ];
+  const registered = new Map<ClientKind, string>([
+    ["cursor", "/Volumes/Boxdeck/Boxdeck.app/Contents/MacOS/boxdeck-mcp"],
+  ]);
+  const mcpClients = async (): Promise<McpClients> => ({
+    server_path: server,
+    clients: clientDefs.map(([kind, name, config_path, installed]) => {
+      const reg = registered.get(kind) ?? null;
+      return {
+        kind,
+        name,
+        config_path,
+        installed: installed || reg !== null,
+        registered: reg,
+        stale: reg !== null && reg !== server,
+        error: null,
+      };
+    }),
+  });
+  let grants: Grant[] = [
+    { project: "/Users/dev/work/api", machine: "db", granted_at: Date.now() - 600_000 },
+  ];
   const audit: AuditEntry[] = [
     {
       time: Date.now() - 90_000,
-      transport: "http",
-      client: "Claude Code",
+      transport: "stdio",
+      client: "stdio:claude-code",
       tool: "machine_up",
       arguments: { project: "/Users/dev/work/api", machine: "db" },
       decision: "allowed",
@@ -217,8 +253,8 @@ export function createMockApi(opts: { stepMs?: number; vagrantMissing?: boolean 
     },
     {
       time: Date.now() - 60_000,
-      transport: "http",
-      client: "Claude Code",
+      transport: "stdio",
+      client: "stdio:claude-code",
       tool: "machine_destroy",
       arguments: { project: "/Users/dev/work/api", machine: "cache" },
       decision: "rejected",
@@ -236,8 +272,6 @@ export function createMockApi(opts: { stepMs?: number; vagrantMissing?: boolean 
       result: "ok",
     },
   ];
-  const newToken = () =>
-    Array.from({ length: 64 }, () => "0123456789abcdef"[Math.floor(Math.random() * 16)]).join("");
   const boxListeners = new Set<() => void>();
   const jobs = new Map<number, JobInfo>();
   const logs = new Map<number, LogLine[]>();
@@ -515,40 +549,55 @@ export function createMockApi(opts: { stepMs?: number; vagrantMissing?: boolean 
       projects = seed();
       changeListeners.forEach((l) => l());
     },
-    mcpStatus: async () => ({
-      running: settings.mcp.enabled,
-      port: settings.mcp.enabled ? settings.mcp.port : null,
-      error: null,
-      url: settings.mcp.enabled ? `http://127.0.0.1:${settings.mcp.port}/mcp` : null,
-      stdio_path: "/Applications/Boxdeck.app/Contents/MacOS/boxdeck-mcp",
-    }),
-    async mcpAddClient(name) {
-      const token = newToken();
-      tokens.set(name, token);
-      settings.mcp.clients.push({ name, token: "", created_at: Date.now() });
-      return token;
+    mcpClients,
+    async mcpConnect(kind) {
+      registered.set(kind, server);
+      return mcpClients();
     },
-    async mcpRotateClient(name) {
-      const token = newToken();
-      tokens.set(name, token);
-      return token;
+    async mcpDisconnect(kind) {
+      registered.delete(kind);
+      return mcpClients();
     },
-    async mcpRemoveClient(name) {
-      tokens.delete(name);
-      settings.mcp.clients = settings.mcp.clients.filter((c) => c.name !== name);
+    mcpGrants: async () => grants,
+    async mcpRevokeGrant(project, machine) {
+      grants = grants.filter((g) => !(g.project === project && g.machine === machine));
+      return grants;
     },
-    mcpClientToken: async (name) => tokens.get(name) ?? "",
     listAudit: async () => [...audit].reverse(),
     onAuditChanged: () => () => {},
-    getApproval: async (id) => ({
-      id,
-      client: "Claude Code",
-      tool: "machine_destroy",
-      project: "/Users/dev/work/api",
-      machine: "cache",
-      arguments: JSON.stringify({ project: "/Users/dev/work/api", machine: "cache" }, null, 2),
-      expires_at: Date.now() + 120_000,
-    }),
+    // `?approval=shell-…` previews the shell-access prompt.
+    getApproval: async (id) =>
+      id.startsWith("shell")
+        ? {
+            id,
+            client: "stdio:claude-code",
+            tool: "ssh_exec",
+            project: "/Users/dev/work/api",
+            machine: "web",
+            arguments: JSON.stringify(
+              { project: "/Users/dev/work/api", machine: "web", command: "npm test" },
+              null,
+              2,
+            ),
+            grantable: true,
+            host_paths: ["/Users/dev/work/api"],
+            expires_at: Date.now() + 120_000,
+          }
+        : {
+            id,
+            client: "stdio:claude-code",
+            tool: "machine_destroy",
+            project: "/Users/dev/work/api",
+            machine: "cache",
+            arguments: JSON.stringify(
+              { project: "/Users/dev/work/api", machine: "cache" },
+              null,
+              2,
+            ),
+            grantable: false,
+            host_paths: [],
+            expires_at: Date.now() + 120_000,
+          },
     answerApproval: async () => {},
     pendingAppUpdate: async () => pendingUpdate,
     async checkAppUpdate() {

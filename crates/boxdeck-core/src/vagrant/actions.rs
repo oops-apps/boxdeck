@@ -116,6 +116,76 @@ pub fn ssh(vagrant: &Path, env: &ProjectEnv, machine: &str) -> Result<CommandSpe
     Ok(spec)
 }
 
+/// Quotes `s` for the guest's POSIX shell.
+fn sh_quote(s: &str) -> String {
+    format!("'{}'", s.replace('\'', r"'\''"))
+}
+
+fn ssh_c(vagrant: &Path, env: &ProjectEnv, machine: &str, script: String) -> Result<CommandSpec> {
+    // `--no-tty` here is `vagrant ssh`'s own flag: no PTY, so output isn't mangled into CRLF.
+    let spec = ssh(vagrant, env, machine)?.args(["-c".to_owned(), script, "--no-tty".to_owned()]);
+    Ok(spec)
+}
+
+/// `vagrant ssh MACHINE -c COMMAND` for agents, optionally run in `cwd` inside the guest.
+pub fn ssh_command(
+    vagrant: &Path,
+    env: &ProjectEnv,
+    machine: &str,
+    command: &str,
+    cwd: Option<&str>,
+) -> Result<CommandSpec> {
+    validate::guest_command(command)?;
+    let script = match cwd {
+        Some(dir) => {
+            validate::guest_path(dir)?;
+            format!("cd {} && {command}", sh_quote(dir))
+        }
+        None => command.to_owned(),
+    };
+    ssh_c(vagrant, env, machine, script)
+}
+
+/// Prints the size of a guest file, a newline, then up to `limit` bytes of it.
+pub fn download(
+    vagrant: &Path,
+    env: &ProjectEnv,
+    machine: &str,
+    path: &str,
+    limit: u64,
+) -> Result<CommandSpec> {
+    validate::guest_path(path)?;
+    let f = sh_quote(path);
+    ssh_c(
+        vagrant,
+        env,
+        machine,
+        format!("wc -c < {f} && head -c {limit} -- {f}"),
+    )
+}
+
+/// `vagrant upload SOURCE DESTINATION MACHINE`. `source` must already be checked to lie inside
+/// the project (see [`validate::inside`]).
+pub fn upload(
+    vagrant: &Path,
+    env: &ProjectEnv,
+    machine: &str,
+    source: &Path,
+    destination: &str,
+) -> Result<CommandSpec> {
+    validate::machine_name(machine)?;
+    validate::guest_path(destination)?;
+    let mut spec = CommandSpec::new(vagrant)
+        .arg("upload")
+        .arg(source)
+        .args([destination, machine, "--no-tty"])
+        .cwd(&env.dir);
+    for (k, v) in env.vars() {
+        spec = spec.env(k, v);
+    }
+    Ok(spec)
+}
+
 fn invalid_option(option: &'static str, action: Action) -> crate::Error {
     crate::Error::invalid(
         option,
@@ -126,6 +196,68 @@ fn invalid_option(option: &'static str, action: Action) -> crate::Error {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn args(spec: &CommandSpec) -> Vec<String> {
+        spec.args
+            .iter()
+            .map(|a| a.to_string_lossy().into_owned())
+            .collect()
+    }
+
+    #[test]
+    fn ssh_command_quotes_cwd_and_disables_the_tty() {
+        let env = ProjectEnv::new("/p");
+        let spec = ssh_command(
+            Path::new("vagrant"),
+            &env,
+            "web",
+            "make test",
+            Some("/srv/it's"),
+        )
+        .unwrap();
+        assert_eq!(
+            args(&spec),
+            [
+                "ssh",
+                "web",
+                "-c",
+                r"cd '/srv/it'\''s' && make test",
+                "--no-tty"
+            ]
+        );
+        assert!(ssh_command(Path::new("vagrant"), &env, "web", " ", None).is_err());
+        assert!(ssh_command(Path::new("vagrant"), &env, "-web", "ls", None).is_err());
+        assert!(ssh_command(Path::new("vagrant"), &env, "web", "ls", Some("a\0b")).is_err());
+    }
+
+    #[test]
+    fn download_and_upload_argv() {
+        let env = ProjectEnv::new("/p");
+        let spec = download(Path::new("vagrant"), &env, "web", "/etc/os-release", 10).unwrap();
+        assert_eq!(
+            args(&spec),
+            [
+                "ssh",
+                "web",
+                "-c",
+                "wc -c < '/etc/os-release' && head -c 10 -- '/etc/os-release'",
+                "--no-tty"
+            ]
+        );
+        let spec = upload(
+            Path::new("vagrant"),
+            &env,
+            "web",
+            Path::new("/p/a b"),
+            "/tmp/x",
+        )
+        .unwrap();
+        assert_eq!(
+            args(&spec),
+            ["upload", "/p/a b", "/tmp/x", "web", "--no-tty"]
+        );
+        assert_eq!(spec.cwd.as_deref(), Some(Path::new("/p")));
+    }
 
     fn argv(action: Action, machine: Option<&str>, opts: &ActionOptions) -> Result<Vec<String>> {
         build(

@@ -225,17 +225,29 @@ describe("Agents", () => {
     expect(screen.getByLabelText("Allow agents to connect")).toBeInTheDocument();
   });
 
-  it("adds a client and fills its token into the snippets", async () => {
+  it("connects a client, reconnects a stale one and revokes a session grant", async () => {
     useUi.setState({ view: "settings", settingsTab: "mcp" });
     renderApp();
-    fireEvent.change(await screen.findByLabelText("New client name"), {
-      target: { value: "Claude Code" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: /Add client/ }));
-    const token = await screen.findByText(/^[0-9a-f]{64}$/);
-    expect(
-      screen.getByText(new RegExp(`claude mcp add .*Bearer ${token.textContent}`)),
-    ).toBeInTheDocument();
+    const row = async (name: string) =>
+      (await screen.findByText(name, { selector: "div.font-medium" })).closest(
+        "div.flex",
+      ) as HTMLElement;
+
+    const claude = await row("Claude Code");
+    expect(within(claude).getByText("Not connected")).toBeInTheDocument();
+    fireEvent.click(within(claude).getByRole("button", { name: "Connect" }));
+    expect(await screen.findByText("Connected Claude Code. Restart it.")).toBeInTheDocument();
+    expect(within(await row("Claude Code")).getByRole("button", { name: "Disconnect" }));
+
+    const cursor = await row("Cursor");
+    expect(within(cursor).getByText("Points to an old copy of Boxdeck")).toBeInTheDocument();
+    fireEvent.click(within(cursor).getByRole("button", { name: "Reconnect" }));
+    expect(await screen.findByText("Connected Cursor. Restart it.")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Revoke" }));
+    await waitFor(() =>
+      expect(screen.queryByText("Allowed until Boxdeck restarts")).not.toBeInTheDocument(),
+    );
   });
 
   it("lists agent calls with their decision", async () => {

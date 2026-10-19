@@ -3,7 +3,9 @@ import type { ActionOptions } from "./generated/ActionOptions";
 import type { AppInfo } from "./generated/AppInfo";
 import type { AppUpdate } from "./generated/AppUpdate";
 import type { AuditEntry } from "./generated/AuditEntry";
-import type { McpStatus } from "./generated/McpStatus";
+import type { ClientKind } from "./generated/ClientKind";
+import type { Grant } from "./generated/Grant";
+import type { McpClients } from "./generated/McpClients";
 import type { PendingApproval } from "./generated/PendingApproval";
 import type { BoxInfo } from "./generated/BoxInfo";
 import type { BoxOp } from "./generated/BoxOp";
@@ -83,17 +85,19 @@ export interface Api {
   importSettings(): Promise<Settings | null>;
   /** Looks for Vagrant again (after installing it, or changing its path). */
   redetectVagrant(): Promise<void>;
-  mcpStatus(): Promise<McpStatus>;
-  /** Returns the new client's token. */
-  mcpAddClient(name: string): Promise<string>;
-  mcpRotateClient(name: string): Promise<string>;
-  mcpRemoveClient(name: string): Promise<void>;
-  mcpClientToken(name: string): Promise<string>;
+  /** Supported MCP clients and whether Boxdeck is registered in their config. */
+  mcpClients(): Promise<McpClients>;
+  mcpConnect(kind: ClientKind): Promise<McpClients>;
+  mcpDisconnect(kind: ClientKind): Promise<McpClients>;
+  /** Machines with shell access allowed until the app restarts. */
+  mcpGrants(): Promise<Grant[]>;
+  mcpRevokeGrant(project: string, machine: string): Promise<Grant[]>;
   /** Agent calls, newest first. */
   listAudit(limit?: number): Promise<AuditEntry[]>;
   onAuditChanged(cb: () => void): Unsubscribe;
-  getApproval(id: number): Promise<PendingApproval | null>;
-  answerApproval(id: number, allow: boolean): Promise<void>;
+  getApproval(id: string): Promise<PendingApproval | null>;
+  /** `session`: also allow shell access to the machine until the app restarts. */
+  answerApproval(id: string, allow: boolean, session?: boolean): Promise<void>;
   /** The release found by the launch check or the last manual check; no network call. */
   pendingAppUpdate(): Promise<AppUpdate | null>;
   checkAppUpdate(): Promise<AppUpdate | null>;

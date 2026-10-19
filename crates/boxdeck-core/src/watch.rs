@@ -60,6 +60,22 @@ pub fn watch_file(file: &Path, on_change: impl Fn() + Send + 'static) -> Result<
     })
 }
 
+/// Calls `on_change` (debounced) when anything in the existing folder `dir` changes.
+pub fn watch_dir(dir: &Path, on_change: impl Fn() + Send + 'static) -> Result<FileWatcher> {
+    let mut debouncer = new_debouncer(DEBOUNCE, None, move |result: DebounceEventResult| {
+        if result.is_ok_and(|events| !events.is_empty()) {
+            on_change();
+        }
+    })
+    .map_err(|e| Error::Watch(e.to_string()))?;
+    debouncer
+        .watch(dir, RecursiveMode::NonRecursive)
+        .map_err(|e| Error::Watch(e.to_string()))?;
+    Ok(FileWatcher {
+        _debouncer: debouncer,
+    })
+}
+
 fn existing_ancestor(dir: &Path) -> Option<PathBuf> {
     dir.ancestors().find(|a| a.is_dir()).map(Path::to_owned)
 }
@@ -86,6 +102,19 @@ mod tests {
         .unwrap();
         std::thread::sleep(Duration::from_millis(200));
         std::fs::write(&file, r#"{"version":1}"#).unwrap();
+        expect_change(&rx);
+    }
+
+    #[test]
+    fn notices_new_files_in_a_folder() {
+        let dir = tempfile::tempdir().unwrap();
+        let (tx, rx) = mpsc::channel();
+        let _w = watch_dir(dir.path(), move || {
+            let _ = tx.send(());
+        })
+        .unwrap();
+        std::thread::sleep(Duration::from_millis(200));
+        std::fs::write(dir.path().join("1-2-3.request.json"), "{}").unwrap();
         expect_change(&rx);
     }
 

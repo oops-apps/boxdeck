@@ -23,7 +23,7 @@ async function start() {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        {approval ? <ApprovalView id={Number(approval)} /> : <App />}
+        {approval ? <ApprovalView id={approval} /> : <App />}
       </QueryClientProvider>
     </React.StrictMode>,
   );

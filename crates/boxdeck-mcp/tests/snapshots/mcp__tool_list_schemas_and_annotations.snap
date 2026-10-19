@@ -4,12 +4,12 @@ expression: summary
 ---
 [
   {
+    "name": "box_add",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
-      "openWorldHint": true,
-      "readOnlyHint": false
+      "openWorldHint": true
     },
-    "has_output_schema": true,
     "input": [
       "architecture",
       "name",
@@ -18,28 +18,28 @@ expression: summary
       "version",
       "wait_seconds"
     ],
-    "name": "box_add"
+    "has_output_schema": true
   },
   {
+    "name": "box_prune",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": true,
-      "idempotentHint": true,
-      "readOnlyHint": false
+      "idempotentHint": true
     },
-    "has_output_schema": true,
     "input": [
       "keep_used",
       "wait_seconds"
     ],
-    "name": "box_prune"
+    "has_output_schema": true
   },
   {
+    "name": "box_remove",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": true,
-      "idempotentHint": true,
-      "readOnlyHint": false
+      "idempotentHint": true
     },
-    "has_output_schema": true,
     "input": [
       "all_architectures",
       "name",
@@ -47,130 +47,130 @@ expression: summary
       "version",
       "wait_seconds"
     ],
-    "name": "box_remove"
+    "has_output_schema": true
   },
   {
+    "name": "box_update",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
-      "openWorldHint": true,
-      "readOnlyHint": false
+      "openWorldHint": true
     },
-    "has_output_schema": true,
     "input": [
       "architecture",
       "name",
       "provider",
       "wait_seconds"
     ],
-    "name": "box_update"
+    "has_output_schema": true
   },
   {
+    "name": "cancel_job",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
-      "idempotentHint": true,
-      "readOnlyHint": false
+      "idempotentHint": true
     },
-    "has_output_schema": true,
     "input": [
       "job_id"
     ],
-    "name": "cancel_job"
+    "has_output_schema": true
   },
   {
+    "name": "check_box_updates",
     "annotations": {
-      "openWorldHint": true,
-      "readOnlyHint": true
+      "readOnlyHint": true,
+      "openWorldHint": true
     },
-    "has_output_schema": true,
     "input": [],
-    "name": "check_box_updates"
+    "has_output_schema": true
   },
   {
+    "name": "get_job",
     "annotations": {
-      "openWorldHint": false,
-      "readOnlyHint": true
+      "readOnlyHint": true,
+      "openWorldHint": false
     },
-    "has_output_schema": true,
     "input": [
       "job_id",
       "tail_lines"
     ],
-    "name": "get_job"
+    "has_output_schema": true
   },
   {
+    "name": "get_machine_details",
     "annotations": {
-      "openWorldHint": false,
-      "readOnlyHint": true
+      "readOnlyHint": true,
+      "openWorldHint": false
     },
-    "has_output_schema": true,
     "input": [
       "machine",
       "project"
     ],
-    "name": "get_machine_details"
+    "has_output_schema": true
   },
   {
+    "name": "get_machine_status",
     "annotations": {
-      "openWorldHint": false,
-      "readOnlyHint": true
+      "readOnlyHint": true,
+      "openWorldHint": false
     },
-    "has_output_schema": true,
     "input": [
       "machine",
       "project"
     ],
-    "name": "get_machine_status"
+    "has_output_schema": true
   },
   {
+    "name": "list_boxes",
     "annotations": {
-      "openWorldHint": false,
-      "readOnlyHint": true
+      "readOnlyHint": true,
+      "openWorldHint": false
     },
-    "has_output_schema": true,
     "input": [],
-    "name": "list_boxes"
+    "has_output_schema": true
   },
   {
+    "name": "list_jobs",
     "annotations": {
-      "openWorldHint": false,
-      "readOnlyHint": true
+      "readOnlyHint": true,
+      "openWorldHint": false
     },
-    "has_output_schema": true,
     "input": [
       "limit"
     ],
-    "name": "list_jobs"
+    "has_output_schema": true
   },
   {
+    "name": "list_machines",
     "annotations": {
-      "openWorldHint": false,
-      "readOnlyHint": true
+      "readOnlyHint": true,
+      "openWorldHint": false
     },
-    "has_output_schema": true,
     "input": [],
-    "name": "list_machines"
+    "has_output_schema": true
   },
   {
+    "name": "machine_destroy",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": true,
-      "idempotentHint": true,
-      "readOnlyHint": false
+      "idempotentHint": true
     },
-    "has_output_schema": true,
     "input": [
       "machine",
       "project",
       "wait_seconds"
     ],
-    "name": "machine_destroy"
+    "has_output_schema": true
   },
   {
+    "name": "machine_halt",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
-      "idempotentHint": true,
-      "readOnlyHint": false
+      "idempotentHint": true
     },
-    "has_output_schema": true,
     "input": [
       "machine",
       "project",
@@ -179,15 +179,15 @@ expression: summary
       "provisioners",
       "wait_seconds"
     ],
-    "name": "machine_halt"
+    "has_output_schema": true
   },
   {
+    "name": "machine_provision",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
-      "idempotentHint": false,
-      "readOnlyHint": false
+      "idempotentHint": false
     },
-    "has_output_schema": true,
     "input": [
       "machine",
       "project",
@@ -196,15 +196,15 @@ expression: summary
       "provisioners",
       "wait_seconds"
     ],
-    "name": "machine_provision"
+    "has_output_schema": true
   },
   {
+    "name": "machine_reload",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
-      "idempotentHint": false,
-      "readOnlyHint": false
+      "idempotentHint": false
     },
-    "has_output_schema": true,
     "input": [
       "machine",
       "project",
@@ -213,15 +213,15 @@ expression: summary
       "provisioners",
       "wait_seconds"
     ],
-    "name": "machine_reload"
+    "has_output_schema": true
   },
   {
+    "name": "machine_resume",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
-      "idempotentHint": true,
-      "readOnlyHint": false
+      "idempotentHint": true
     },
-    "has_output_schema": true,
     "input": [
       "machine",
       "project",
@@ -230,15 +230,15 @@ expression: summary
       "provisioners",
       "wait_seconds"
     ],
-    "name": "machine_resume"
+    "has_output_schema": true
   },
   {
+    "name": "machine_suspend",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
-      "idempotentHint": true,
-      "readOnlyHint": false
+      "idempotentHint": true
     },
-    "has_output_schema": true,
     "input": [
       "machine",
       "project",
@@ -247,15 +247,15 @@ expression: summary
       "provisioners",
       "wait_seconds"
     ],
-    "name": "machine_suspend"
+    "has_output_schema": true
   },
   {
+    "name": "machine_up",
     "annotations": {
+      "readOnlyHint": false,
       "destructiveHint": false,
-      "idempotentHint": true,
-      "readOnlyHint": false
+      "idempotentHint": true
     },
-    "has_output_schema": true,
     "input": [
       "machine",
       "project",
@@ -264,57 +264,91 @@ expression: summary
       "provisioners",
       "wait_seconds"
     ],
-    "name": "machine_up"
+    "has_output_schema": true
   },
   {
+    "name": "read_vagrantfile",
     "annotations": {
-      "openWorldHint": false,
-      "readOnlyHint": true
+      "readOnlyHint": true,
+      "openWorldHint": false
     },
-    "has_output_schema": true,
     "input": [
       "project"
     ],
-    "name": "read_vagrantfile"
+    "has_output_schema": true
   },
   {
+    "name": "ssh_exec",
     "annotations": {
-      "destructiveHint": true,
-      "openWorldHint": true,
-      "readOnlyHint": false
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": true
     },
-    "has_output_schema": true,
     "input": [
       "command",
+      "cwd",
       "machine",
       "project",
-      "timeout_seconds"
+      "timeout_seconds",
+      "wait_seconds"
     ],
-    "name": "ssh_exec"
+    "has_output_schema": true
   },
   {
+    "name": "validate_vagrantfile",
     "annotations": {
-      "openWorldHint": false,
-      "readOnlyHint": true
+      "readOnlyHint": true,
+      "openWorldHint": false
     },
-    "has_output_schema": true,
     "input": [
       "project"
     ],
-    "name": "validate_vagrantfile"
+    "has_output_schema": true
   },
   {
+    "name": "vm_download",
     "annotations": {
-      "destructiveHint": true,
-      "idempotentHint": true,
-      "readOnlyHint": false
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": true
     },
-    "has_output_schema": true,
+    "input": [
+      "machine",
+      "max_bytes",
+      "path",
+      "project",
+      "save_to"
+    ],
+    "has_output_schema": true
+  },
+  {
+    "name": "vm_upload",
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "openWorldHint": true
+    },
+    "input": [
+      "destination",
+      "machine",
+      "project",
+      "source",
+      "wait_seconds"
+    ],
+    "has_output_schema": true
+  },
+  {
+    "name": "write_vagrantfile",
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    },
     "input": [
       "content",
       "expected_content",
       "project"
     ],
-    "name": "write_vagrantfile"
+    "has_output_schema": true
   }
 ]

@@ -27,6 +27,7 @@ export function emptyProject(): ProjectSettings {
     env: {},
     up: { provider: null, provision: null },
     agent_access: "inherit",
+    shell: null,
     machines: {},
   };
 }

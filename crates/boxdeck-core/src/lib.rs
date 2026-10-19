@@ -1,6 +1,8 @@
 //! Shared core for the Boxdeck app and `boxdeck-mcp`. Must never depend on Tauri.
 
 pub mod audit;
+pub mod bridge;
+pub mod clients;
 pub mod config;
 pub mod error;
 pub mod jobs;

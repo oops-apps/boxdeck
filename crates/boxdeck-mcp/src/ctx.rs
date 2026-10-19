@@ -1,5 +1,5 @@
-//! What the MCP tools run against. The headless binary builds its own; the app (M6b) shares
-//! its job registry, status cache and settings, so behaviour is identical in both.
+//! What the MCP tools run against: Vagrant, a job registry, the shared settings and audit log,
+//! and the bridge to the running app for approvals.
 
 use std::future::Future;
 use std::path::{Path, PathBuf};
@@ -7,10 +7,12 @@ use std::pin::Pin;
 use std::sync::Arc;
 
 use boxdeck_core::audit::AuditLog;
+pub use boxdeck_core::bridge::ApprovalRequest;
+use boxdeck_core::bridge::Bridge;
 use boxdeck_core::config::Settings;
 use boxdeck_core::jobs::{JobId, Jobs};
 use boxdeck_core::machines::{self, Project};
-use boxdeck_core::policy::{self, Transport};
+use boxdeck_core::policy;
 use boxdeck_core::vagrant::ProjectEnv;
 use boxdeck_core::vagrant::index;
 use boxdeck_core::vagrant::locate::Vagrant;
@@ -18,27 +20,38 @@ use boxdeck_core::vagrant::status::StatusService;
 
 pub type SettingsFn = Arc<dyn Fn() -> Settings + Send + Sync>;
 pub type BoxFuture<T> = Pin<Box<dyn Future<Output = T> + Send>>;
-/// Asks the user to allow a destructive call (HTTP mode). `true` means allowed.
-pub type ApproveFn = Arc<dyn Fn(ApprovalRequest) -> BoxFuture<bool> + Send + Sync>;
-/// Called once a job an agent started has finished (the app refreshes its views).
+/// Called once a job an agent started has finished.
 pub type JobDoneFn = Arc<dyn Fn(JobId) + Send + Sync>;
 
-/// Everything the approval prompt shows.
-#[derive(Debug, Clone, serde::Serialize)]
-pub struct ApprovalRequest {
-    pub client: String,
-    pub tool: String,
-    pub project: Option<PathBuf>,
-    pub machine: Option<String>,
-    pub arguments: serde_json::Value,
+/// Reaches the user in the Boxdeck app. [`Bridge`] in production; a fake in tests.
+pub trait Approver: Send + Sync {
+    /// Whether the app is running to answer.
+    fn app_running(&self) -> bool;
+    /// Whether the user allowed shell access to this machine for the session.
+    fn granted(&self, project: &Path, machine: &str) -> bool;
+    /// Asks; `true` means allowed. No answer in time means no.
+    fn ask(&self, req: ApprovalRequest) -> BoxFuture<bool>;
 }
 
-/// The authenticated client's name, attached to HTTP requests by the app's auth layer.
-#[derive(Debug, Clone)]
-pub struct ClientName(pub String);
+impl Approver for Bridge {
+    fn app_running(&self) -> bool {
+        Bridge::app_running(self)
+    }
 
-/// Pulls the client name out of a request's extensions (HTTP mode).
-pub type ClientFn = Arc<dyn Fn(&rmcp::model::Extensions) -> Option<String> + Send + Sync>;
+    fn granted(&self, project: &Path, machine: &str) -> bool {
+        Bridge::granted(self, project, machine)
+    }
+
+    fn ask(&self, req: ApprovalRequest) -> BoxFuture<bool> {
+        let bridge = self.clone();
+        Box::pin(async move {
+            bridge.ask(req).await.unwrap_or_else(|e| {
+                eprintln!("boxdeck-mcp: could not ask for approval: {e}");
+                false
+            })
+        })
+    }
+}
 
 pub struct Ctx {
     pub vagrant: Result<Vagrant, String>,
@@ -47,11 +60,9 @@ pub struct Ctx {
     pub settings: SettingsFn,
     pub index_path: Option<PathBuf>,
     pub vagrant_home: Option<PathBuf>,
-    pub transport: Transport,
     pub audit: Option<AuditLog>,
-    pub approve: Option<ApproveFn>,
+    pub approvals: Option<Arc<dyn Approver>>,
     pub on_job_done: Option<JobDoneFn>,
-    pub client_from: Option<ClientFn>,
 }
 
 impl Ctx {

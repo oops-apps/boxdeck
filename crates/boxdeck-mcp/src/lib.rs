@@ -1,10 +1,9 @@
-//! MCP server for Boxdeck: the tool router and policy glue shared by the headless stdio
-//! binary (`main.rs`) and the app's HTTP endpoint.
+//! MCP server for Boxdeck: the tool router and policy glue behind the stdio binary (`main.rs`).
 
 pub mod ctx;
 pub mod server;
 
-pub use ctx::{ApprovalRequest, ClientName, Ctx};
+pub use ctx::{ApprovalRequest, Approver, Ctx};
 pub use server::BoxdeckServer;
 
 /// Name the server reports to MCP clients.

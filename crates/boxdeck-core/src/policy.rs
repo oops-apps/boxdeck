@@ -1,19 +1,19 @@
-//! Who may call which MCP tool (plan §4.8). Every tool call is decided here, in both the
-//! in-app HTTP endpoint and the headless `boxdeck-mcp`.
+//! Who may call which MCP tool (plan §4.8). Every tool call is decided here.
 
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
 
-use crate::config::{AccessLevel, AgentAccess, DefaultProjectAccess, Settings};
+use crate::config::{AccessLevel, AgentAccess, DefaultProjectAccess, Settings, ShellMode};
 
+/// How a call reached Boxdeck, as recorded in the audit log.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ts_rs::TS)]
 #[serde(rename_all = "snake_case")]
 #[ts(export)]
 pub enum Transport {
-    /// In-app Streamable HTTP; can ask the user for approval.
+    /// The in-app HTTP endpoint, removed in M6c; kept so older audit lines still parse.
     Http,
-    /// Headless `boxdeck-mcp`; can't ask anyone.
+    /// `boxdeck-mcp`, launched by the client.
     Stdio,
 }
 
@@ -22,38 +22,53 @@ pub enum Transport {
 pub struct ToolNeeds {
     pub level: AccessLevel,
     pub destructive: bool,
-    /// `ssh_exec` has its own opt-in on top of Full.
-    pub ssh_exec: bool,
+    /// Works inside a VM; governed by the shell mode.
+    pub shell: bool,
 }
 
 impl ToolNeeds {
     pub const READ: Self = Self {
         level: AccessLevel::Read,
         destructive: false,
-        ssh_exec: false,
+        shell: false,
     };
     pub const OPERATE: Self = Self {
         level: AccessLevel::Operate,
         destructive: false,
-        ssh_exec: false,
+        shell: false,
     };
     pub const FULL: Self = Self {
         level: AccessLevel::Full,
         destructive: true,
-        ssh_exec: false,
+        shell: false,
     };
-    pub const SSH_EXEC: Self = Self {
-        level: AccessLevel::Full,
-        destructive: true,
-        ssh_exec: true,
+    pub const SHELL: Self = Self {
+        level: AccessLevel::Operate,
+        destructive: false,
+        shell: true,
     };
+}
+
+/// What the gate knows about a call besides the settings.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Situation<'a> {
+    /// The project the call targets, if any.
+    pub project: Option<&'a Path>,
+    /// The app is running, so it can show an approval.
+    pub app_running: bool,
+    /// Shell calls: the VM can write host files through a synced folder.
+    pub host_writable: bool,
+    /// Shell calls: the user allowed this machine for the session.
+    pub granted: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Decision {
     Allow,
-    /// Ask the user (HTTP only).
-    NeedsApproval,
+    /// Ask the user in the app. `grantable`: they may allow the machine for the session.
+    NeedsApproval {
+        grantable: bool,
+    },
     /// Refused; the message goes back to the agent.
     Deny(String),
 }
@@ -70,13 +85,16 @@ pub fn project_allowed(settings: &Settings, dir: &Path) -> bool {
     }
 }
 
-/// Decides a tool call. `project` is the project the call targets, if any.
-pub fn decide(
-    settings: &Settings,
-    needs: ToolNeeds,
-    transport: Transport,
-    project: Option<&Path>,
-) -> Decision {
+/// The shell mode for a project: its override, or the global one.
+pub fn shell_mode(settings: &Settings, project: Option<&Path>) -> ShellMode {
+    project
+        .and_then(|dir| settings.project(dir))
+        .and_then(|p| p.shell)
+        .unwrap_or(settings.mcp.shell)
+}
+
+/// Decides a tool call.
+pub fn decide(settings: &Settings, needs: ToolNeeds, at: Situation<'_>) -> Decision {
     let mcp = &settings.mcp;
     if !mcp.enabled {
         return Decision::Deny("Agent access is turned off in Boxdeck's settings.".into());
@@ -90,25 +108,45 @@ pub fn decide(
             needs.level, mcp.access
         ));
     }
-    if needs.ssh_exec && !mcp.ssh_exec {
-        return Decision::Deny("ssh_exec is turned off in Boxdeck's settings.".into());
-    }
-    if let Some(dir) = project
+    if let Some(dir) = at.project
         && !project_allowed(settings, dir)
     {
         // Same message as an unknown project, so a denied one doesn't reveal itself.
         return Decision::Deny("Unknown project folder.".into());
     }
+    if needs.shell {
+        match shell_mode(settings, at.project) {
+            ShellMode::Off => {
+                return Decision::Deny(
+                    "Shell access to VMs is turned off in Boxdeck's settings.".into(),
+                );
+            }
+            ShellMode::Always => {}
+            ShellMode::AskOnce if !at.host_writable => {}
+            ShellMode::AskOnce if at.app_running && at.granted => {}
+            ShellMode::AskOnce if at.app_running => {
+                return Decision::NeedsApproval { grantable: true };
+            }
+            ShellMode::AskOnce if mcp.shell_headless => {}
+            ShellMode::AskOnce => {
+                return Decision::Deny(
+                    "This VM can change files on the host, so Boxdeck asks once before shell \
+                     access. Open the Boxdeck app to approve it."
+                        .into(),
+                );
+            }
+        }
+    }
     if needs.destructive {
-        return match transport {
-            Transport::Http => Decision::NeedsApproval,
-            Transport::Stdio if mcp.headless_destructive => Decision::Allow,
-            Transport::Stdio => Decision::Deny(
-                "Destructive tools need approval, which headless mode can't ask for. Connect over \
-                 HTTP with the Boxdeck app running."
+        if at.app_running {
+            return Decision::NeedsApproval { grantable: false };
+        }
+        if !mcp.headless_destructive {
+            return Decision::Deny(
+                "Destructive tools need approval in the Boxdeck app. Open Boxdeck and try again."
                     .into(),
-            ),
-        };
+            );
+        }
     }
     Decision::Allow
 }
@@ -125,22 +163,42 @@ mod tests {
         s
     }
 
+    fn running() -> Situation<'static> {
+        Situation {
+            app_running: true,
+            ..Default::default()
+        }
+    }
+
+    fn kind(d: &Decision) -> &'static str {
+        match d {
+            Decision::Allow => "allow",
+            Decision::NeedsApproval { grantable: true } => "grant",
+            Decision::NeedsApproval { grantable: false } => "approve",
+            Decision::Deny(_) => "deny",
+        }
+    }
+
     const ALL: [ToolNeeds; 4] = [
         ToolNeeds::READ,
         ToolNeeds::OPERATE,
         ToolNeeds::FULL,
-        ToolNeeds::SSH_EXEC,
+        ToolNeeds::SHELL,
     ];
-    const TRANSPORTS: [Transport; 2] = [Transport::Http, Transport::Stdio];
 
     #[test]
     fn off_or_paused_denies_everything() {
         let mut paused = on(AccessLevel::Full);
         paused.mcp.paused = true;
+        paused.mcp.shell = ShellMode::Always;
         for s in [Settings::default(), paused] {
             for needs in ALL {
-                for t in TRANSPORTS {
-                    assert!(matches!(decide(&s, needs, t, None), Decision::Deny(_)));
+                for app_running in [false, true] {
+                    let at = Situation {
+                        app_running,
+                        ..Default::default()
+                    };
+                    assert_eq!(kind(&decide(&s, needs, at)), "deny");
                 }
             }
         }
@@ -150,25 +208,25 @@ mod tests {
     fn every_tool_level_against_every_access_level() {
         use AccessLevel::*;
         for access in [Read, Operate, Full] {
-            let s = on(access);
+            let mut s = on(access);
+            s.mcp.shell = ShellMode::Always;
             for needs in ALL {
-                for t in TRANSPORTS {
-                    let d = decide(&s, needs, t, None);
-                    let expected = if needs.level > access || needs.ssh_exec {
+                for app_running in [false, true] {
+                    let at = Situation {
+                        app_running,
+                        ..Default::default()
+                    };
+                    let expected = if needs.level > access {
                         "deny"
-                    } else if needs.destructive && t == Transport::Http {
+                    } else if needs.destructive && app_running {
                         "approve"
                     } else if needs.destructive {
                         "deny"
                     } else {
                         "allow"
                     };
-                    let got = match d {
-                        Decision::Allow => "allow",
-                        Decision::NeedsApproval => "approve",
-                        Decision::Deny(_) => "deny",
-                    };
-                    assert_eq!(got, expected, "{access:?} {needs:?} {t:?}");
+                    let got = kind(&decide(&s, needs, at));
+                    assert_eq!(got, expected, "{access:?} {needs:?} app={app_running}");
                 }
             }
         }
@@ -179,33 +237,94 @@ mod tests {
         let mut s = on(AccessLevel::Full);
         s.mcp.headless_destructive = true;
         assert_eq!(
-            decide(&s, ToolNeeds::FULL, Transport::Stdio, None),
+            decide(&s, ToolNeeds::FULL, Situation::default()),
             Decision::Allow
         );
-        assert_eq!(
-            decide(&s, ToolNeeds::FULL, Transport::Http, None),
-            Decision::NeedsApproval
-        );
+        assert_eq!(kind(&decide(&s, ToolNeeds::FULL, running())), "approve");
+    }
+
+    /// Every shell-mode combination: mode, host-writable, granted, app running, headless switch.
+    #[test]
+    fn shell_mode_table() {
+        use ShellMode::*;
+        for mode in [Off, AskOnce, Always] {
+            for host_writable in [false, true] {
+                for granted in [false, true] {
+                    for app_running in [false, true] {
+                        for headless in [false, true] {
+                            let mut s = on(AccessLevel::Operate);
+                            s.mcp.shell = mode;
+                            s.mcp.shell_headless = headless;
+                            let at = Situation {
+                                project: None,
+                                app_running,
+                                host_writable,
+                                granted,
+                            };
+                            let expected = match mode {
+                                Off => "deny",
+                                Always => "allow",
+                                AskOnce if !host_writable => "allow",
+                                AskOnce if app_running && granted => "allow",
+                                AskOnce if app_running => "grant",
+                                AskOnce if headless => "allow",
+                                AskOnce => "deny",
+                            };
+                            let got = kind(&decide(&s, ToolNeeds::SHELL, at));
+                            assert_eq!(got, expected, "{mode:?} {at:?} headless={headless}");
+                        }
+                    }
+                }
+            }
+        }
     }
 
     #[test]
-    fn ssh_exec_needs_its_own_switch() {
-        let mut s = on(AccessLevel::Full);
-        assert!(matches!(
-            decide(&s, ToolNeeds::SSH_EXEC, Transport::Http, None),
-            Decision::Deny(_)
-        ));
-        s.mcp.ssh_exec = true;
-        assert_eq!(
-            decide(&s, ToolNeeds::SSH_EXEC, Transport::Http, None),
-            Decision::NeedsApproval
-        );
+    fn shell_needs_operate_not_full() {
+        let mut s = on(AccessLevel::Read);
+        s.mcp.shell = ShellMode::Always;
+        assert_eq!(kind(&decide(&s, ToolNeeds::SHELL, running())), "deny");
+        s.mcp.access = AccessLevel::Operate;
+        assert_eq!(kind(&decide(&s, ToolNeeds::SHELL, running())), "allow");
+    }
+
+    #[test]
+    fn project_overrides_shell_mode() {
+        let mut s = on(AccessLevel::Operate);
+        let p = Path::new("/p");
+        let at = Situation {
+            project: Some(p),
+            app_running: true,
+            host_writable: true,
+            granted: false,
+        };
+        let set = |s: &mut Settings, mode: Option<ShellMode>| {
+            s.projects.insert(
+                "/p".into(),
+                ProjectSettings {
+                    shell: mode,
+                    ..Default::default()
+                },
+            );
+        };
+        assert_eq!(kind(&decide(&s, ToolNeeds::SHELL, at)), "deny");
+        set(&mut s, Some(ShellMode::Always));
+        assert_eq!(kind(&decide(&s, ToolNeeds::SHELL, at)), "allow");
+        s.mcp.shell = ShellMode::Always;
+        set(&mut s, Some(ShellMode::Off));
+        assert_eq!(kind(&decide(&s, ToolNeeds::SHELL, at)), "deny");
+        set(&mut s, None);
+        assert_eq!(kind(&decide(&s, ToolNeeds::SHELL, at)), "allow");
     }
 
     #[test]
     fn project_rules() {
         let mut s = on(AccessLevel::Operate);
         let p = Path::new("/p");
+        let at = Situation {
+            project: Some(p),
+            ..Default::default()
+        };
         let set = |s: &mut Settings, a: AgentAccess| {
             s.projects.insert(
                 "/p".into(),
@@ -215,13 +334,10 @@ mod tests {
                 },
             );
         };
-        assert_eq!(
-            decide(&s, ToolNeeds::READ, Transport::Stdio, Some(p)),
-            Decision::Allow
-        );
+        assert_eq!(decide(&s, ToolNeeds::READ, at), Decision::Allow);
         set(&mut s, AgentAccess::Deny);
         assert_eq!(
-            decide(&s, ToolNeeds::READ, Transport::Stdio, Some(p)),
+            decide(&s, ToolNeeds::READ, at),
             Decision::Deny("Unknown project folder.".into())
         );
         s.mcp.default_access = DefaultProjectAccess::OnlyAllowed;

@@ -8,6 +8,7 @@ pub mod index;
 pub mod locate;
 pub mod machine_readable;
 pub mod status;
+pub mod synced;
 pub mod vagrantfile;
 
 use std::ffi::OsString;

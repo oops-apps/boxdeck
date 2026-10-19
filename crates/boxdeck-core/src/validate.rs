@@ -94,6 +94,50 @@ pub fn machine_name(name: &str) -> Result<()> {
     })
 }
 
+/// A command for an agent to run inside a VM: free-form, but bounded.
+pub fn guest_command(command: &str) -> Result<()> {
+    if command.trim().is_empty() || command.len() > 8192 || command.contains('\0') {
+        return Err(Error::invalid("command", "must be 1 to 8192 characters"));
+    }
+    Ok(())
+}
+
+/// A path inside a VM.
+pub fn guest_path(path: &str) -> Result<()> {
+    if path.trim().is_empty() || path.len() > 4096 || path.contains(['\0', '\n', '\r']) {
+        return Err(Error::invalid(
+            "guest path",
+            "must be 1 to 4096 characters on one line",
+        ));
+    }
+    Ok(())
+}
+
+/// Resolves a host path for file transfer, relative to the project, and checks that it stays
+/// inside it (after symlinks). Agents may move files between the VM and the project folder, not
+/// anywhere else on the host. With `existing = false` only the parent has to exist.
+pub fn inside(project: &Path, path: &str, existing: bool) -> Result<PathBuf> {
+    let outside = || Error::invalid("host path", "must be inside the project folder");
+    let root = project.canonicalize().map_err(|_| outside())?;
+    let joined = root.join(path);
+    let resolved = if existing {
+        joined.canonicalize().map_err(|_| outside())?
+    } else {
+        let name = joined
+            .file_name()
+            .filter(|n| *n != ".." && *n != ".")
+            .ok_or_else(outside)?
+            .to_owned();
+        let parent = joined.parent().ok_or_else(outside)?;
+        parent.canonicalize().map_err(|_| outside())?.join(name)
+    };
+    if resolved.starts_with(&root) && resolved != root {
+        Ok(resolved)
+    } else {
+        Err(outside())
+    }
+}
+
 /// A box name: `name` or `org/name`, each part letters, digits, `.`, `_`, `-`.
 pub fn box_name(name: &str) -> Result<()> {
     charset("box name", name, |c| {
@@ -144,6 +188,55 @@ pub fn flag<'a>(value: &str, allowed: &[&'a str]) -> Result<&'a str> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn host_paths_stay_inside_the_project() {
+        let dir = tempfile::tempdir().unwrap();
+        let project = dir.path().join("proj");
+        std::fs::create_dir_all(project.join("sub")).unwrap();
+        std::fs::write(project.join("sub/a.txt"), "x").unwrap();
+        std::fs::write(dir.path().join("secret"), "x").unwrap();
+        let root = project.canonicalize().unwrap();
+
+        assert_eq!(
+            inside(&project, "sub/a.txt", true).unwrap(),
+            root.join("sub/a.txt")
+        );
+        let abs = root.join("sub/a.txt");
+        assert!(inside(&project, abs.to_str().unwrap(), true).is_ok());
+        assert_eq!(
+            inside(&project, "sub/new.bin", false).unwrap(),
+            root.join("sub/new.bin")
+        );
+        for bad in [
+            "../secret",
+            "sub/../../secret",
+            ".",
+            "",
+            "sub/..",
+            "missing/x",
+        ] {
+            assert!(inside(&project, bad, false).is_err(), "{bad}");
+        }
+        assert!(inside(&project, "sub/none.txt", true).is_err());
+        let secret = dir.path().join("secret");
+        assert!(inside(&project, secret.to_str().unwrap(), true).is_err());
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(dir.path(), project.join("escape")).unwrap();
+            assert!(inside(&project, "escape/secret", true).is_err());
+            assert!(inside(&project, "escape/new", false).is_err());
+        }
+    }
+
+    #[test]
+    fn guest_inputs() {
+        assert!(guest_command("ls -la").is_ok());
+        assert!(guest_command("").is_err());
+        assert!(guest_command(&"x".repeat(8193)).is_err());
+        assert!(guest_path("/srv/app").is_ok());
+        assert!(guest_path("a\nb").is_err());
+    }
 
     #[test]
     fn machine_names() {
