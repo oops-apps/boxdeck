@@ -23,6 +23,9 @@ mod tests {
 
     #[test]
     fn version_is_semver() {
-        assert_eq!(VERSION.split('.').count(), 3);
+        let core = VERSION.split_once('-').map_or(VERSION, |(core, _)| core);
+        let parts: Vec<_> = core.split('.').collect();
+        assert_eq!(parts.len(), 3, "{VERSION}");
+        assert!(parts.iter().all(|p| p.parse::<u64>().is_ok()), "{VERSION}");
     }
 }
