@@ -94,9 +94,6 @@ a { color: inherit; text-decoration: none; }
 .grainy::after { content: ""; position: absolute; inset: 0; opacity: .22; mix-blend-mode: overlay; pointer-events: none; background-image: var(--grain); z-index: 2; }
 
 /* Announcement bar */
-.bar { background: var(--pearl); color: #0d0d0d; text-align: center; font-size: 14px; font-weight: 500; padding: 9px 16px; }
-.bar b { font-weight: 600; }
-.bar a { text-decoration: underline; text-underline-offset: 2px; }
 
 /* Nav */
 header.top { position: sticky; top: 0; z-index: 20; padding: 14px 0; }
@@ -335,14 +332,11 @@ footer p { flex-basis: 100%; margin: 6px 0 0; }
   section { padding-top: 80px; }
   .final { padding: 64px 20px; margin-top: 80px; }
   footer nav { margin-left: 0; }
-  .bar .opt { display: none; }
   .promo { aspect-ratio: auto; min-height: 220px; }
 }
 </style>
 </head>
 <body>
-
-<div class="bar"><b>v0.1.0</b> is on its way<span class="opt"> · free and open source, MIT licensed</span> · <a href="https://github.com/oops-apps/boxdeck#development">Build it today</a></div>
 
 <header class="top">
   <div class="wrap">
