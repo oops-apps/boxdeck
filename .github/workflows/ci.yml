@@ -1,9 +1,12 @@
 name: CI
 
+# The site is deployed by pages.yml and has nothing for CI to check.
 on:
   push:
     branches: [main]
+    paths-ignore: ["site/**"]
   pull_request:
+    paths-ignore: ["site/**"]
 
 permissions:
   contents: read
