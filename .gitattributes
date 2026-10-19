@@ -1,0 +1,5 @@
+# LF on every checkout, so Windows matches what Prettier and the tests expect.
+* text=auto eol=lf
+
+# Captured Vagrant output must stay byte-for-byte as recorded.
+crates/boxdeck-core/tests/fixtures/** -text
