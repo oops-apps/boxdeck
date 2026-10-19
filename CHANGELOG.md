@@ -4,6 +4,8 @@ All notable changes to Boxdeck are recorded here. The format follows [Keep a Cha
 
 ## [Unreleased]
 
+## [0.1.0-beta.3] - 2026-10-19
+
 ### Added
 
 - In-app updates: Boxdeck checks GitHub Releases at startup (can be turned off), shows the release notes, and installs a signed update and restarts from Settings → Backup & about or the tray.
