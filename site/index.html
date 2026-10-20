@@ -404,7 +404,7 @@ footer p { flex-basis: 100%; margin: 6px 0 0; }
   <div class="wrap">
     <a class="logo glass" href="./" aria-label="Boxdeck home"><img src="icon.png" alt="" width="26" height="26">boxdeck</a>
     <nav class="navpill glass" aria-label="Sections">
-      <a class="on" href="#features">Features</a>
+      <a href="#features">Features</a>
       <a href="#agents">AI agents<span class="new">MCP</span></a>
       <a href="#start">Get started</a>
       <span class="sep"></span>
@@ -740,6 +740,27 @@ active
     if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
   }), { threshold: 0.1 });
   document.querySelectorAll(".rv").forEach((el) => io.observe(el));
+
+  // Highlight the header link for the section under the header. Each link stays active until
+  // the next linked section starts, so FAQ keeps "AI agents" lit and the hero lights nothing.
+  const navLinks = [...document.querySelectorAll('.navpill a[href^="#"]')];
+  const navTargets = navLinks.map((a) => document.querySelector(a.getAttribute("href")));
+  let navFrame = 0;
+  const syncNav = () => {
+    navFrame = 0;
+    const line = 120;
+    const atEnd = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
+    let active = -1;
+    navTargets.forEach((el, i) => { if (el && el.getBoundingClientRect().top <= line) active = i; });
+    if (atEnd) active = navTargets.length - 1;
+    navLinks.forEach((a, i) => {
+      a.classList.toggle("on", i === active);
+      if (i === active) a.setAttribute("aria-current", "location"); else a.removeAttribute("aria-current");
+    });
+  };
+  addEventListener("scroll", () => { navFrame ||= requestAnimationFrame(syncNav); }, { passive: true });
+  addEventListener("resize", syncNav);
+  syncNav();
 </script>
 </body>
 </html>
