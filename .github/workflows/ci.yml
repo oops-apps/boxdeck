@@ -51,7 +51,7 @@ jobs:
           components: rustfmt, clippy
 
       # Pull requests restore main's cache but never save their own, so they can't evict it.
-      - uses: Swatinem/rust-cache@v2.9.2
+      - uses: Swatinem/rust-cache@v2.9.3
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
