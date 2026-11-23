@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: EmbarkStudios/cargo-deny-action@v2.1.1
+      - uses: EmbarkStudios/cargo-deny-action@v2.1.3
         with:
           command: check
 
@@ -51,7 +51,7 @@ jobs:
           components: rustfmt, clippy
 
       # Pull requests restore main's cache but never save their own, so they can't evict it.
-      - uses: Swatinem/rust-cache@v2.9.2
+      - uses: Swatinem/rust-cache@v2.9.3
         with:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 

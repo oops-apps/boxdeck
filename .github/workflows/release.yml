@@ -141,7 +141,7 @@ jobs:
 
       # Release builds per target; runs started from the Actions tab save on main, so the next
       # release restores them.
-      - uses: Swatinem/rust-cache@v2.9.2
+      - uses: Swatinem/rust-cache@v2.9.3
         with:
           key: release-${{ matrix.target }}
 
